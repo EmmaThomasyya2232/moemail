@@ -36,6 +36,8 @@
     "namePlaceholder": "Leave empty for random generation",
     "domain": "Domain",
     "domainPlaceholder": "Select a domain",
+    "subDomain": "Subdomain Prefix",
+    "subDomainPlaceholder": "Optional, e.g. edu",
     "expiryTime": "Validity Period",
     "oneHour": "1 Hour",
     "oneDay": "1 Day",

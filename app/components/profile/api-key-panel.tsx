@@ -354,6 +354,7 @@ export function ApiKeyPanel() {
   -H "Content-Type: application/json" \\
   -d '{
     "name": "test",
+    "subDomain": "edu",
     "expiryTime": 3600000,
     "domain": "moemail.app"
   }'`
@@ -368,6 +369,7 @@ export function ApiKeyPanel() {
   -H "Content-Type: application/json" \\
   -d '{
     "name": "test",
+    "subDomain": "edu",
     "expiryTime": 3600000,
     "domain": "moemail.app"
   }'`}

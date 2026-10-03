@@ -11,7 +11,7 @@ it talks to the exact same MoeMail API (authenticated with an `X-API-Key`).
 
 | Tool | Description |
 |------|-------------|
-| `create_email` | Create a temporary mailbox (`expiry`: `1h` / `24h` / `3d` / `permanent`) |
+| `create_email` | Create a temporary mailbox (`expiry`: `1h` / `24h` / `3d` / `permanent`; optional `subDomain`) |
 | `list_emails` | List mailboxes owned by the API key |
 | `list_messages` | List messages in a mailbox |
 | `read_message` | Read full text/HTML of a message |

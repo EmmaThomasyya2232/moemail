@@ -459,12 +459,14 @@ Content-Type: application/json
 
 {
   "name": "test",
+  "subDomain": "edu",
   "expiryTime": 3600000,
   "domain": "moemail.app"
 }
 ```
 Params:
 - `name`: Prefix (optional)
+- `subDomain`: Subdomain prefix placed before the domain (optional). `edu` → `test@edu.moemail.app`
 - `expiryTime`: Validity in ms. 3600000(1h), 86400000(24h), 604800000(7d), 0(Permanent)
 - `domain`: From config
 
@@ -472,7 +474,7 @@ Response:
 ```json
 {
   "id": "email-uuid-123",
-  "email": "test@moemail.app"
+  "email": "test@edu.moemail.app"
 }
 ```
 

@@ -36,6 +36,8 @@
     "namePlaceholder": "留空则随机生成",
     "domain": "域名",
     "domainPlaceholder": "选择域名",
+    "subDomain": "子域名前缀",
+    "subDomainPlaceholder": "可选，比如 edu",
     "expiryTime": "有效期",
     "oneHour": "1 小时",
     "oneDay": "1 天",

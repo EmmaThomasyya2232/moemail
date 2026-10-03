@@ -12,6 +12,12 @@ import { ROLES } from "@/lib/permissions"
 
 export const runtime = "edge"
 
+// A subdomain prefix is one or more DNS labels placed before the configured
+// domain, e.g. `edu` or `team.a` in `user@edu.busmail.app`. Each label is 1-63
+// characters and the whole prefix is limited to 253 characters.
+const SUBDOMAIN_PREFIX_PATTERN =
+  /^(?=.{1,253}$)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+
 export async function POST(request: Request) {
   const db = createDb()
   const env = getRequestContext().env
@@ -40,8 +46,9 @@ export async function POST(request: Request) {
       }
     }
 
-    const { name, expiryTime, domain } = await request.json<{ 
+    const { name, subDomain, expiryTime, domain } = await request.json<{ 
       name: string
+      subDomain?: string
       expiryTime: number
       domain: string
     }>()
@@ -63,7 +70,17 @@ export async function POST(request: Request) {
       )
     }
 
-    const address = `${name || nanoid(8)}@${domain}`
+    const normalizedSubDomain =
+      typeof subDomain === "string" ? subDomain.trim().replace(/^\.+|\.+$/g, "") : ""
+
+    if (normalizedSubDomain && !SUBDOMAIN_PREFIX_PATTERN.test(normalizedSubDomain)) {
+      return NextResponse.json(
+        { error: "无效的子域名前缀" },
+        { status: 400 }
+      )
+    }
+
+    const address = `${name || nanoid(8)}@${normalizedSubDomain ? `${normalizedSubDomain}.` : ""}${domain}`
     const existingEmail = await db.query.emails.findFirst({
       where: eq(sql`LOWER(${emails.address})`, address.toLowerCase())
     })

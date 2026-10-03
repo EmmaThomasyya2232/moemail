@@ -67,7 +67,7 @@ async function request(
 export const api = {
   getConfig: () => request("GET", "/api/config"),
 
-  createEmail: (body: { name?: string; expiryTime: number; domain: string }) =>
+  createEmail: (body: { name?: string; subDomain?: string; expiryTime: number; domain: string }) =>
     request("POST", "/api/emails/generate", body as any),
 
   listEmails: (cursor?: string) =>

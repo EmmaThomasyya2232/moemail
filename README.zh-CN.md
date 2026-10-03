@@ -463,12 +463,14 @@ Content-Type: application/json
 
 {
   "name": "test",
+  "subDomain": "edu",
   "expiryTime": 3600000,
   "domain": "moemail.app"
 }
 ```
 参数说明：
 - `name`: 邮箱前缀，可选
+- `subDomain`: 子域名前缀，位于主域名之前，可选。例如 `edu` → `test@edu.moemail.app`
 - `expiryTime`: 有效期（毫秒），可选值：3600000（1小时）、86400000（1天）、604800000（7天）、0（永久）
 - `domain`: 邮箱域名，可通过 `/api/config` 接口获取
 
@@ -476,7 +478,7 @@ Content-Type: application/json
 ```json
 {
   "id": "email-uuid-123",
-  "email": "test@moemail.app"
+  "email": "test@edu.moemail.app"
 }
 ```
 响应字段说明：
@@ -747,6 +749,7 @@ curl -X POST https://your-domain.com/api/emails/generate \
   -H "Content-Type: application/json" \
   -d '{
     "name": "test",
+    "subDomain": "edu",
     "expiryTime": 3600000,
     "domain": "moemail.app"
   }'

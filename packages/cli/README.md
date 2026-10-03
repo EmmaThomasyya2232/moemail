@@ -35,7 +35,7 @@ moemail wait --email-id <email_id> --timeout 120
 |---------|-------------|-----------|
 | `config set` | Set `api-url` or `api-key` | `config set <api-url\|api-key> <value>` |
 | `config list` | Show current configuration | — |
-| `create` | Create a temporary email address | `--name <prefix>`, `--domain <domain>`, `--expiry <1h\|24h\|3d\|permanent>`, `--json` |
+| `create` | Create a temporary email address | `--name <prefix>`, `--subdomain <subdomain>`, `--domain <domain>`, `--expiry <1h\|24h\|3d\|permanent>`, `--json` |
 | `list` | List mailboxes, or messages in a mailbox | `--email-id <id>`, `--cursor <cursor>`, `--json` |
 | `wait` | Wait for incoming messages | `--email-id <id>`, `--timeout <seconds>`, `--interval <seconds>`, `--json` |
 | `read` | Read email message content | `--email-id <id>`, `--message-id <id>`, `--format <text\|html>`, `--json` |

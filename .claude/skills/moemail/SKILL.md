@@ -74,7 +74,7 @@ $CLI --json read --email-id "$ID" --message-id "$MSG_ID"
 | Command | Required options | Notes |
 |---------|------------------|-------|
 | `config set` | `<key> <value>` | keys: `api-url`, `api-key` |
-| `create` | - | `--name`, `--domain`, `--expiry` |
+| `create` | - | `--name`, `--subdomain`, `--domain`, `--expiry` |
 | `list` | - | `--email-id`, `--cursor` |
 | `wait` | `--email-id` | `--timeout`, `--interval` |
 | `read` | `--email-id`, `--message-id` | `--format text|html` |

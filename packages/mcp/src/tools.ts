@@ -56,6 +56,10 @@ export function registerTools(server: McpServer): void {
         "Create a temporary email address. Returns its id and address. Use the id for all later operations.",
       inputSchema: {
         name: z.string().optional().describe("Email prefix (random if omitted)"),
+        subDomain: z
+          .string()
+          .optional()
+          .describe("Subdomain prefix placed before the domain (optional, e.g. `edu` → user@edu.domain)"),
         domain: z.string().optional().describe("Email domain (first configured domain if omitted)"),
         expiry: z
           .enum(["1h", "24h", "3d", "permanent"])
@@ -63,7 +67,7 @@ export function registerTools(server: McpServer): void {
           .describe("Lifetime of the mailbox"),
       },
     },
-    ({ name, domain, expiry }) =>
+    ({ name, subDomain, domain, expiry }) =>
       run(async () => {
         const expiryTime = EXPIRY_MAP[expiry];
 
@@ -80,7 +84,12 @@ export function registerTools(server: McpServer): void {
           resolvedDomain = domains[0];
         }
 
-        const result = (await api.createEmail({ name, expiryTime, domain: resolvedDomain })) as any;
+        const result = (await api.createEmail({
+          name,
+          subDomain,
+          expiryTime,
+          domain: resolvedDomain,
+        })) as any;
         const expiresAt = expiryTime === 0 ? null : msToIso(Date.now() + expiryTime);
         return ok({ id: result.id, address: result.email, expiresAt });
       }),

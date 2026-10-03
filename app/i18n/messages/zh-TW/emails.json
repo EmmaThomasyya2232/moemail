@@ -36,6 +36,8 @@
     "namePlaceholder": "留空則隨機生成",
     "domain": "網域",
     "domainPlaceholder": "選擇網域",
+    "subDomain": "子網域前綴",
+    "subDomainPlaceholder": "可選，例如 edu",
     "expiryTime": "有效期",
     "oneHour": "1 小時",
     "oneDay": "1 天",

@@ -11,7 +11,7 @@ Install: npm i -g @moemail/cli
 Setup: moemail config set api-url https://moemail.app && moemail config set api-key YOUR_KEY
 
 Commands:
-- moemail create --domain <domain> --expiry <1h|24h|3d|permanent> --json
+- moemail create --domain <domain> [--subdomain <sub>] --expiry <1h|24h|3d|permanent> --json
 - moemail list --json
 - moemail list --email-id <id> --json
 - moemail wait --email-id <id> --timeout <seconds> --json

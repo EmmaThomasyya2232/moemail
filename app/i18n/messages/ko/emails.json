@@ -36,6 +36,8 @@
     "namePlaceholder": "비워두면 무작위로 생성됩니다",
     "domain": "도메인",
     "domainPlaceholder": "도메인 선택",
+    "subDomain": "서브도메인 접두사",
+    "subDomainPlaceholder": "선택 사항, 예: edu",
     "expiryTime": "유효 기간",
     "oneHour": "1시간",
     "oneDay": "1일",
