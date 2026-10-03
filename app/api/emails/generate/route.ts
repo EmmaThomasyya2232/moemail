@@ -61,7 +61,11 @@ export async function POST(request: Request) {
     }
 
     const domainString = await env.SITE_CONFIG.get("EMAIL_DOMAINS")
+    const subdomainString = await env.SITE_CONFIG.get("EMAIL_SUBDOMAIN_DOMAINS")
     const domains = domainString ? domainString.split(',') : ["moemail.app"]
+    const subdomainDomains = subdomainString
+      ? subdomainString.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
+      : []
 
     if (!domains || !domains.includes(domain)) {
       return NextResponse.json(
@@ -76,6 +80,17 @@ export async function POST(request: Request) {
     if (normalizedSubDomain && !SUBDOMAIN_PREFIX_PATTERN.test(normalizedSubDomain)) {
       return NextResponse.json(
         { error: "无效的子域名前缀" },
+        { status: 400 }
+      )
+    }
+
+    if (normalizedSubDomain && subdomainDomains.length > 0 && !subdomainDomains.includes(domain.trim().toLowerCase())) {
+      return NextResponse.json(
+        {
+          code: "SUBDOMAIN_NOT_ENABLED",
+          error: "该域名未启用子域名邮箱，请清空子域名前缀后重试，或联系管理员开启",
+          domain,
+        },
         { status: 400 }
       )
     }

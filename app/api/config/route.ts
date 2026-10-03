@@ -12,6 +12,7 @@ export async function GET() {
   const [
     defaultRole,
     emailDomains,
+    emailSubdomainDomains,
     adminContact,
     maxEmails,
     turnstileEnabled,
@@ -20,6 +21,7 @@ export async function GET() {
   ] = await Promise.all([
     env.SITE_CONFIG.get("DEFAULT_ROLE"),
     env.SITE_CONFIG.get("EMAIL_DOMAINS"),
+    env.SITE_CONFIG.get("EMAIL_SUBDOMAIN_DOMAINS"),
     env.SITE_CONFIG.get("ADMIN_CONTACT"),
     env.SITE_CONFIG.get("MAX_EMAILS"),
     env.SITE_CONFIG.get("TURNSTILE_ENABLED"),
@@ -30,6 +32,7 @@ export async function GET() {
   return Response.json({
     defaultRole: defaultRole || ROLES.CIVILIAN,
     emailDomains: emailDomains || "moemail.app",
+    emailSubdomainDomains: emailSubdomainDomains || "",
     adminContact: adminContact || "",
     maxEmails: maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString(),
     turnstile: canManageConfig ? {
@@ -52,12 +55,14 @@ export async function POST(request: Request) {
   const {
     defaultRole,
     emailDomains,
+    emailSubdomainDomains,
     adminContact,
     maxEmails,
     turnstile
   } = await request.json() as { 
     defaultRole: Exclude<Role, typeof ROLES.EMPEROR>,
     emailDomains: string,
+    emailSubdomainDomains?: string,
     adminContact: string,
     maxEmails: string,
     turnstile?: {
@@ -85,6 +90,7 @@ export async function POST(request: Request) {
   await Promise.all([
     env.SITE_CONFIG.put("DEFAULT_ROLE", defaultRole),
     env.SITE_CONFIG.put("EMAIL_DOMAINS", emailDomains),
+    env.SITE_CONFIG.put("EMAIL_SUBDOMAIN_DOMAINS", emailSubdomainDomains ?? ""),
     env.SITE_CONFIG.put("ADMIN_CONTACT", adminContact),
     env.SITE_CONFIG.put("MAX_EMAILS", maxEmails),
     env.SITE_CONFIG.put("TURNSTILE_ENABLED", turnstileConfig.enabled.toString()),

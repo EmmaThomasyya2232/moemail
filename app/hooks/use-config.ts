@@ -9,6 +9,8 @@ interface Config {
   defaultRole: Exclude<Role, typeof ROLES.EMPEROR>
   emailDomains: string
   emailDomainsArray: string[]
+  emailSubdomainDomains: string
+  emailSubdomainDomainsArray: string[]
   adminContact: string
   maxEmails: number
 }
@@ -30,11 +32,16 @@ const useConfigStore = create<ConfigStore>((set) => ({
       const res = await fetch("/api/config")
       if (!res.ok) throw new Error("获取配置失败")
       const data = await res.json() as Config
+      const emailSubdomainDomains = data.emailSubdomainDomains ?? ""
       set({
         config: {
           defaultRole: data.defaultRole || ROLES.CIVILIAN,
           emailDomains: data.emailDomains,
           emailDomainsArray: data.emailDomains.split(','),
+          emailSubdomainDomains,
+          emailSubdomainDomainsArray: emailSubdomainDomains
+            ? emailSubdomainDomains.split(',').map(d => d.trim()).filter(Boolean)
+            : [],
           adminContact: data.adminContact || "",
           maxEmails: Number(data.maxEmails) || EMAIL_CONFIG.MAX_ACTIVE_EMAILS
         },

@@ -1,5 +1,12 @@
 import { NotFoundError } from "cloudflare";
-import "dotenv/config";
+// 先加载 .env 并清洗单行环境变量：GitHub Secrets 里粘贴 token 很容易带入首尾换行或空格。
+// wrangler 读取 CLOUDFLARE_API_TOKEN 后是原样拼进
+// `Authorization: Bearer <token>` 请求头的，值里一旦含有换行，
+// undici 会直接抛 `Headers.append: "..." is an invalid header value`，
+// 而 token 还会被脱敏成 ***，极难定位。
+// 这里的副作用导入必须保持在最前面（含 ./cloudflare 之前），
+// 因为 ESM 会先求值全部 import 语句，位置靠后就晚了。
+import "./sanitize-env";
 import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -21,7 +28,8 @@ const KV_NAMESPACE_ID = process.env.KV_NAMESPACE_ID;
 /**
  * 验证必要的环境变量
  *
- * 说明：AUTH_SECRET 是必填项，用于加密登录会话以及为用户密码加盐。
+ * 说明：单行环境变量已在 ./sanitize-env 副作用导入时清洗过。
+ * AUTH_SECRET 是必填项，用于加密登录会话以及为用户密码加盐。
  * GitHub / Google 的 OAuth 变量是可选项，只有需要第三方登录时才需配置。
  */
 const validateEnvironment = () => {

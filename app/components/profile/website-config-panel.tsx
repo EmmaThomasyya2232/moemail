@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Settings } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useCopy } from "@/hooks/use-copy"
 import { useState, useEffect } from "react"
 import { Role, ROLES } from "@/lib/permissions"
 import { Input } from "@/components/ui/input"
@@ -23,7 +24,9 @@ export function WebsiteConfigPanel() {
   const t = useTranslations("profile.website")
   const tCard = useTranslations("profile.card")
   const [defaultRole, setDefaultRole] = useState<string>("")
-  const [emailDomains, setEmailDomains] = useState<string>("")
+  const [domains, setDomains] = useState<string[]>([])
+  const [domainInput, setDomainInput] = useState<string>("")
+  const [subdomainEnabled, setSubdomainEnabled] = useState<Record<string, boolean>>({})
   const [adminContact, setAdminContact] = useState<string>("")
   const [maxEmails, setMaxEmails] = useState<string>(EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString())
   const [turnstileEnabled, setTurnstileEnabled] = useState(false)
@@ -31,7 +34,9 @@ export function WebsiteConfigPanel() {
   const [turnstileSecretKey, setTurnstileSecretKey] = useState("")
   const [showSecretKey, setShowSecretKey] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [expandedGuide, setExpandedGuide] = useState<string | null>(null)
   const { toast } = useToast()
+  const { copyToClipboard } = useCopy()
 
 
   useEffect(() => {
@@ -44,6 +49,7 @@ export function WebsiteConfigPanel() {
       const data = await res.json() as { 
         defaultRole: Exclude<Role, typeof ROLES.EMPEROR>,
         emailDomains: string,
+        emailSubdomainDomains?: string,
         adminContact: string,
         maxEmails: string,
         turnstile?: {
@@ -53,7 +59,18 @@ export function WebsiteConfigPanel() {
         }
       }
       setDefaultRole(data.defaultRole)
-      setEmailDomains(data.emailDomains)
+      const list = (data.emailDomains || "")
+        .split(",")
+        .map(d => d.trim().toLowerCase())
+        .filter(Boolean)
+      const enabled = (data.emailSubdomainDomains || "")
+        .split(",")
+        .map(d => d.trim().toLowerCase())
+        .filter(Boolean)
+      setDomains(list)
+      setSubdomainEnabled(
+        Object.fromEntries(list.map(d => [d, enabled.length === 0 || enabled.includes(d)]))
+      )
       setAdminContact(data.adminContact)
       setMaxEmails(data.maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString())
       setTurnstileEnabled(Boolean(data.turnstile?.enabled))
@@ -62,15 +79,37 @@ export function WebsiteConfigPanel() {
     }
   }
 
+  const addDomain = () => {
+    const value = domainInput.trim().toLowerCase()
+    if (!value || domains.includes(value)) {
+      setDomainInput("")
+      return
+    }
+    setDomains(prev => [...prev, value])
+    setSubdomainEnabled(prev => ({ ...prev, [value]: true }))
+    setDomainInput("")
+  }
+
+  const removeDomain = (domain: string) => {
+    setDomains(prev => prev.filter(d => d !== domain))
+    setSubdomainEnabled(prev => {
+      const next = { ...prev }
+      delete next[domain]
+      return next
+    })
+  }
+
   const handleSave = async () => {
     setLoading(true)
     try {
+      const subdomainList = domains.filter(d => subdomainEnabled[d] !== false)
       const res = await fetch("/api/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           defaultRole, 
-          emailDomains,
+          emailDomains: domains.join(","),
+          emailSubdomainDomains: subdomainList.length === domains.length ? "" : subdomainList.join(","),
           adminContact,
           maxEmails: maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString(),
           turnstile: {
@@ -120,15 +159,101 @@ export function WebsiteConfigPanel() {
           </Select>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{t("emailDomains")}:</span>
-          <div className="flex-1">
-            <Input 
-              value={emailDomains}
-              onChange={(e) => setEmailDomains(e.target.value)}
+        <div className="space-y-2">
+          <span className="text-sm">{t("emailDomains")} ({domains.length}):</span>
+          <div className="flex gap-2">
+            <Input
+              value={domainInput}
+              onChange={(e) => setDomainInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  addDomain()
+                }
+              }}
               placeholder={t("emailDomainsPlaceholder")}
             />
+            <Button type="button" variant="outline" onClick={addDomain}>
+              {t("addDomain")}
+            </Button>
           </div>
+          {domains.length > 0 ? (
+            <div className="space-y-2 rounded-lg border p-3">
+              {domains.map((domain) => (
+                <div key={domain} className="space-y-2 rounded-md border p-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="min-w-0 flex-1 truncate font-mono">@{domain}</span>
+                    <Label htmlFor={`subdomain-${domain}`} className="shrink-0 text-xs text-muted-foreground">
+                      {t("subdomainEnabled")}
+                    </Label>
+                    <Switch
+                      id={`subdomain-${domain}`}
+                      checked={subdomainEnabled[domain] !== false}
+                      onCheckedChange={(checked) =>
+                        setSubdomainEnabled(prev => ({ ...prev, [domain]: checked }))
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeDomain(domain)}
+                    >
+                      {t("removeDomain")}
+                    </Button>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setExpandedGuide(prev => prev === domain ? null : domain)}
+                  >
+                    {expandedGuide === domain ? t("guideHide") : t("guideShow")}
+                  </Button>
+                  {expandedGuide === domain && (
+                    <div className="space-y-2 rounded-md bg-muted/50 p-3 text-xs leading-relaxed">
+                      <p className="font-medium text-sm">{t("guideTitle", { domain })}</p>
+                      <ol className="list-decimal space-y-1 pl-4">
+                        <li>{t("guideStep1", { domain })}</li>
+                        <li>{t("guideStep2")}</li>
+                        <li>{t("guideStep3", { domain })}</li>
+                        <li>{t("guideStep4")}</li>
+                        <li>{t("guideStep5", { domain })}</li>
+                      </ol>
+                      <div className="space-y-1 font-mono">
+                        {[
+                          `MX @ route1.mx.cloudflare.net`,
+                          `MX @ route2.mx.cloudflare.net`,
+                          `MX @ route3.mx.cloudflare.net`,
+                          `MX * route1.mx.cloudflare.net`,
+                          `MX * route2.mx.cloudflare.net`,
+                          `MX * route3.mx.cloudflare.net`,
+                          `TXT @ v=spf1 include:_spf.mx.cloudflare.net ~all`,
+                        ].map(line => (
+                          <div key={line} className="flex items-center justify-between gap-2 rounded bg-background px-2 py-1">
+                            <span className="truncate">{line}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 shrink-0 px-2"
+                              onClick={() => copyToClipboard(line)}
+                            >
+                              {t("copyRecord")}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-muted-foreground">{t("guideVerify", { domain })}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">{t("subdomainHint")}</p>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">{t("emailDomainsPlaceholder")}</p>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

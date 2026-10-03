@@ -28,10 +28,19 @@ export function CreateDialog({ onEmailCreated }: CreateDialogProps) {
   const [loading, setLoading] = useState(false)
   const [emailName, setEmailName] = useState("")
   const [currentDomain, setCurrentDomain] = useState("")
+  const [domainSearch, setDomainSearch] = useState("")
   const [subDomain, setSubDomain] = useState("")
   const [expiryTime, setExpiryTime] = useState(EXPIRY_OPTIONS[1].value.toString())
   const { toast } = useToast()
   const { copyToClipboard } = useCopy()
+
+  const domains = config?.emailDomainsArray ?? []
+  const subdomainDomains = config?.emailSubdomainDomainsArray ?? []
+  const subdomainEnabledForCurrent =
+    subdomainDomains.length === 0 || subdomainDomains.includes(currentDomain)
+  const filteredDomains = domains.filter(d =>
+    d.toLowerCase().includes(domainSearch.trim().toLowerCase())
+  )
 
   const generateRandomName = () => setEmailName(nanoid(8))
 
@@ -68,10 +77,13 @@ export function CreateDialog({ onEmailCreated }: CreateDialogProps) {
       })
 
       if (!response.ok) {
-        const data = await response.json()
+        const data = await response.json() as { code?: string, error: string }
+        if (data.code === "SUBDOMAIN_NOT_ENABLED") {
+          setSubDomain("")
+        }
         toast({
           title: tList("error"),
-          description: (data as { error: string }).error,
+          description: data.error,
           variant: "destructive"
         })
         return
@@ -101,6 +113,12 @@ export function CreateDialog({ onEmailCreated }: CreateDialogProps) {
       setCurrentDomain(config?.emailDomainsArray[0] ?? "")
     }
   }, [config])
+
+  useEffect(() => {
+    if (!subdomainEnabledForCurrent && subDomain.trim()) {
+      setSubDomain("")
+    }
+  }, [currentDomain, subdomainEnabledForCurrent, subDomain])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -138,20 +156,41 @@ export function CreateDialog({ onEmailCreated }: CreateDialogProps) {
                 onChange={(e) => setSubDomain(e.target.value)}
                 placeholder={t("subDomainPlaceholder")}
                 className="flex-1"
+                disabled={!subdomainEnabledForCurrent}
               />
-              {(config?.emailDomainsArray?.length ?? 0) > 1 && (
-                <Select value={currentDomain} onValueChange={setCurrentDomain}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {config?.emailDomainsArray?.map(d => (
-                      <SelectItem key={d} value={d}>@{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={currentDomain} onValueChange={setCurrentDomain}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      value={domainSearch}
+                      onChange={(e) => setDomainSearch(e.target.value)}
+                      placeholder={t("domainSearchPlaceholder")}
+                      className="h-8"
+                    />
+                  </div>
+                  {filteredDomains.length > 0 ? (
+                    filteredDomains.map(d => (
+                      <SelectItem key={d} value={d}>
+                        @{d}
+                        {(config?.emailSubdomainDomainsArray ?? []).length > 0 &&
+                          !(config?.emailSubdomainDomainsArray ?? []).includes(d) &&
+                          ` (${t("subdomainDisabledSuffix")})`}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      {t("domainNoResult")}
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
+            {!subdomainEnabledForCurrent && (
+              <p className="text-xs text-muted-foreground">{t("subdomainDisabledHint")}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
