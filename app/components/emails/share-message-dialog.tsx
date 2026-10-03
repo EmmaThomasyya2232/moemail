@@ -222,12 +222,12 @@ export function ShareMessageDialog({ emailId, messageId, messageSubject, trigger
               <Label>{t("activeLinks")}</Label>
               <div className="h-[270px] overflow-y-auto">
                 {loading ? (
-                  <div className="text-sm text-gray-500 text-center py-8 flex flex-col items-center gap-2">
+                  <div className="text-sm text-muted-foreground text-center py-8 flex flex-col items-center gap-2">
                     <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                     <span>{t("loading")}</span>
                   </div>
                 ) : shares.length === 0 ? (
-                  <div className="text-sm text-gray-500 text-center py-4">
+                  <div className="text-sm text-muted-foreground text-center py-4">
                     {t("noLinks")}
                   </div>
                 ) : (
@@ -268,7 +268,7 @@ export function ShareMessageDialog({ emailId, messageId, messageSubject, trigger
                               "flex-1 text-xs p-1 rounded font-mono transition-colors break-all",
                               isExpired
                                 ? "bg-destructive/10 text-destructive/70 cursor-not-allowed pointer-events-none"
-                                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary cursor-pointer"
+                                : "bg-secondary text-secondary-foreground hover:text-primary dark:hover:text-primary cursor-pointer"
                             )}
                           >
                             {getShareUrl(share.token)}
@@ -292,7 +292,7 @@ export function ShareMessageDialog({ emailId, messageId, messageSubject, trigger
                         </div>
                         <div className="flex gap-y-4 gap-x-2 sm:gap-x-4 text-xs">
                           <span className={cn(
-                            isExpired ? "text-destructive/70" : "text-gray-500"
+                            isExpired ? "text-destructive/70" : "text-muted-foreground"
                           )}>
                             {t("createdAt")}: {new Date(
                               typeof share.createdAt === 'number' 
@@ -301,7 +301,7 @@ export function ShareMessageDialog({ emailId, messageId, messageSubject, trigger
                             ).toLocaleString()}
                           </span>
                           <span className={cn(
-                            isExpired ? "text-destructive/70" : "text-gray-500"
+                            isExpired ? "text-destructive/70" : "text-muted-foreground"
                           )}>
                             {t("expiresAt")}: {
                               share.expiresAt

@@ -2,15 +2,13 @@
 
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { Settings } from "lucide-react"
+import { Eye, EyeOff, Globe } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { useCopy } from "@/hooks/use-copy"
 import { useState, useEffect } from "react"
 import { Role, ROLES } from "@/lib/permissions"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -34,10 +32,7 @@ export function WebsiteConfigPanel() {
   const [turnstileSecretKey, setTurnstileSecretKey] = useState("")
   const [showSecretKey, setShowSecretKey] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [expandedGuide, setExpandedGuide] = useState<string | null>(null)
   const { toast } = useToast()
-  const { copyToClipboard } = useCopy()
-
 
   useEffect(() => {
     fetchConfig()
@@ -46,7 +41,7 @@ export function WebsiteConfigPanel() {
   const fetchConfig = async () => {
     const res = await fetch("/api/config")
     if (res.ok) {
-      const data = await res.json() as { 
+      const data = await res.json() as {
         defaultRole: Exclude<Role, typeof ROLES.EMPEROR>,
         emailDomains: string,
         emailSubdomainDomains?: string,
@@ -102,14 +97,14 @@ export function WebsiteConfigPanel() {
   const handleSave = async () => {
     setLoading(true)
     try {
-      const subdomainList = domains.filter(d => subdomainEnabled[d] !== false)
+      const allowed = domains.filter(d => subdomainEnabled[d] !== false)
       const res = await fetch("/api/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          defaultRole, 
+        body: JSON.stringify({
+          defaultRole,
           emailDomains: domains.join(","),
-          emailSubdomainDomains: subdomainList.length === domains.length ? "" : subdomainList.join(","),
+          emailSubdomainDomains: allowed.length === domains.length ? "" : allowed.join(","),
           adminContact,
           maxEmails: maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString(),
           turnstile: {
@@ -126,10 +121,10 @@ export function WebsiteConfigPanel() {
         title: t("saveSuccess"),
         description: t("saveSuccess"),
       })
-    } catch (error) {
+    } catch {
       toast({
         title: t("saveFailed"),
-        description: error instanceof Error ? error.message : t("saveFailed"),
+        description: t("saveFailed"),
         variant: "destructive",
       })
     } finally {
@@ -138,156 +133,111 @@ export function WebsiteConfigPanel() {
   }
 
   return (
-    <div className="bg-background rounded-lg border-2 border-primary/20 p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Settings className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-semibold">{t("title")}</h2>
+    <div className="rounded-xl border bg-card">
+      <div className="flex items-center gap-2 border-b px-4 py-3 sm:px-5">
+        <Globe className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold">{t("title")}</h2>
       </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{t("defaultRole")}:</span>
-          <Select value={defaultRole} onValueChange={setDefaultRole}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ROLES.DUKE}>{tCard("roles.DUKE")}</SelectItem>
-              <SelectItem value={ROLES.KNIGHT}>{tCard("roles.KNIGHT")}</SelectItem>
-              <SelectItem value={ROLES.CIVILIAN}>{tCard("roles.CIVILIAN")}</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="space-y-4 px-4 py-4 sm:px-5">
+        <div className="flex items-center gap-3">
+          <span className="shrink-0 text-[13px] text-muted-foreground">{t("defaultRole")}</span>
+          <div className="flex-1">
+            <Select value={defaultRole} onValueChange={setDefaultRole}>
+              <SelectTrigger className="h-8 text-[13px]">
+                <SelectValue placeholder={t("defaultRole")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ROLES.DUKE}>{tCard("roles.DUKE")}</SelectItem>
+                <SelectItem value={ROLES.KNIGHT}>{tCard("roles.KNIGHT")}</SelectItem>
+                <SelectItem value={ROLES.CIVILIAN}>{tCard("roles.CIVILIAN")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm">{t("emailDomains")} ({domains.length}):</span>
+          <div className="flex items-center justify-between">
+            <Label className="text-[13px] font-medium">
+              {t("emailDomains")} {domains.length > 0 && <span className="text-muted-foreground">({domains.length})</span>}
+            </Label>
+          </div>
+          <p className="text-[11px] text-muted-foreground">{t("subdomainHint")}</p>
           <div className="flex gap-2">
             <Input
               value={domainInput}
               onChange={(e) => setDomainInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  addDomain()
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDomain() } }}
               placeholder={t("emailDomainsPlaceholder")}
+              className="h-8 text-[13px]"
             />
-            <Button type="button" variant="outline" onClick={addDomain}>
+            <Button type="button" size="sm" variant="outline" onClick={addDomain}>
               {t("addDomain")}
             </Button>
           </div>
           {domains.length > 0 ? (
-            <div className="space-y-2 rounded-lg border p-3">
-              {domains.map((domain) => (
-                <div key={domain} className="space-y-2 rounded-md border p-3">
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="min-w-0 flex-1 truncate font-mono">@{domain}</span>
-                    <Label htmlFor={`subdomain-${domain}`} className="shrink-0 text-xs text-muted-foreground">
-                      {t("subdomainEnabled")}
-                    </Label>
-                    <Switch
-                      id={`subdomain-${domain}`}
-                      checked={subdomainEnabled[domain] !== false}
-                      onCheckedChange={(checked) =>
-                        setSubdomainEnabled(prev => ({ ...prev, [domain]: checked }))
-                      }
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeDomain(domain)}
-                    >
-                      {t("removeDomain")}
-                    </Button>
-                  </div>
+            <div className="divide-y rounded-lg border">
+              {domains.map(domain => (
+                <div key={domain} className="flex items-center gap-3 px-3 py-2">
+                  <span className="min-w-0 flex-1 truncate font-mono text-[13px]">@{domain}</span>
+                  <Label htmlFor={`sub-${domain}`} className="shrink-0 text-[11px] text-muted-foreground">
+                    {t("subdomainEnabled")}
+                  </Label>
+                  <Switch
+                    id={`sub-${domain}`}
+                    checked={subdomainEnabled[domain] !== false}
+                    onCheckedChange={(v) => setSubdomainEnabled(prev => ({ ...prev, [domain]: v }))}
+                  />
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    onClick={() => setExpandedGuide(prev => prev === domain ? null : domain)}
+                    className="h-7 shrink-0 px-2 text-[12px] text-destructive hover:text-destructive"
+                    onClick={() => removeDomain(domain)}
                   >
-                    {expandedGuide === domain ? t("guideHide") : t("guideShow")}
+                    {t("removeDomain")}
                   </Button>
-                  {expandedGuide === domain && (
-                    <div className="space-y-2 rounded-md bg-muted/50 p-3 text-xs leading-relaxed">
-                      <p className="font-medium text-sm">{t("guideTitle", { domain })}</p>
-                      <ol className="list-decimal space-y-1 pl-4">
-                        <li>{t("guideStep1", { domain })}</li>
-                        <li>{t("guideStep2")}</li>
-                        <li>{t("guideStep3", { domain })}</li>
-                        <li>{t("guideStep4")}</li>
-                        <li>{t("guideStep5", { domain })}</li>
-                      </ol>
-                      <div className="space-y-1 font-mono">
-                        {[
-                          `MX @ route1.mx.cloudflare.net`,
-                          `MX @ route2.mx.cloudflare.net`,
-                          `MX @ route3.mx.cloudflare.net`,
-                          `MX * route1.mx.cloudflare.net`,
-                          `MX * route2.mx.cloudflare.net`,
-                          `MX * route3.mx.cloudflare.net`,
-                          `TXT @ v=spf1 include:_spf.mx.cloudflare.net ~all`,
-                        ].map(line => (
-                          <div key={line} className="flex items-center justify-between gap-2 rounded bg-background px-2 py-1">
-                            <span className="truncate">{line}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 shrink-0 px-2"
-                              onClick={() => copyToClipboard(line)}
-                            >
-                              {t("copyRecord")}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-muted-foreground">{t("guideVerify", { domain })}</p>
-                    </div>
-                  )}
                 </div>
               ))}
-              <p className="text-xs text-muted-foreground">{t("subdomainHint")}</p>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">{t("emailDomainsPlaceholder")}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{t("adminContact")}:</span>
+        <div className="flex items-center gap-3">
+          <span className="shrink-0 text-[13px] text-muted-foreground">{t("adminContact")}</span>
           <div className="flex-1">
-            <Input 
+            <Input
               value={adminContact}
               onChange={(e) => setAdminContact(e.target.value)}
               placeholder={t("adminContactPlaceholder")}
+              className="h-8 text-[13px]"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{t("maxEmails")}:</span>
+        <div className="flex items-center gap-3">
+          <span className="shrink-0 text-[13px] text-muted-foreground">{t("maxEmails")}</span>
           <div className="flex-1">
-            <Input 
+            <Input
               type="number"
               min="1"
               max="100"
               value={maxEmails}
               onChange={(e) => setMaxEmails(e.target.value)}
               placeholder={`${EMAIL_CONFIG.MAX_ACTIVE_EMAILS}`}
+              className="h-8 text-[13px]"
             />
           </div>
         </div>
 
-        <div className="space-y-4 rounded-lg border border-dashed border-primary/40 p-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="turnstile-enabled" className="text-sm font-medium">
+        <div className="space-y-3 rounded-lg border border-dashed p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="turnstile-enabled" className="text-[13px] font-medium">
                 {t("turnstile.enable")}
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {t("turnstile.enableDescription")}
               </p>
             </div>
@@ -298,8 +248,8 @@ export function WebsiteConfigPanel() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="turnstile-site-key" className="text-sm font-medium">
+          <div className="space-y-1.5">
+            <Label htmlFor="turnstile-site-key" className="text-[13px] font-medium">
               {t("turnstile.siteKey")}
             </Label>
             <Input
@@ -307,11 +257,12 @@ export function WebsiteConfigPanel() {
               value={turnstileSiteKey}
               onChange={(e) => setTurnstileSiteKey(e.target.value)}
               placeholder={t("turnstile.siteKeyPlaceholder")}
+              className="h-8 text-[13px]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="turnstile-secret-key" className="text-sm font-medium">
+          <div className="space-y-1.5">
+            <Label htmlFor="turnstile-secret-key" className="text-[13px] font-medium">
               {t("turnstile.secretKey")}
             </Label>
             <div className="relative">
@@ -321,6 +272,7 @@ export function WebsiteConfigPanel() {
                 value={turnstileSecretKey}
                 onChange={(e) => setTurnstileSecretKey(e.target.value)}
                 placeholder={t("turnstile.secretKeyPlaceholder")}
+                className="h-8 pr-9 text-[13px]"
               />
               <Button
                 type="button"
@@ -332,20 +284,20 @@ export function WebsiteConfigPanel() {
                 {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               {t("turnstile.secretKeyDescription")}
             </p>
           </div>
         </div>
 
-        <Button 
+        <Button
           onClick={handleSave}
           disabled={loading}
-          className="w-full"
+          className="h-8 w-full text-[13px]"
         >
-          {t("save")}
+          {loading ? t("saving") : t("save")}
         </Button>
       </div>
     </div>
   )
-} 
+}

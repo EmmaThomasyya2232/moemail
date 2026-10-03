@@ -157,14 +157,14 @@ export function SharedMessageDetail({
     return (
       <div className="flex items-center justify-center h-32">
         <Loader2 className="w-5 h-5 animate-spin text-primary/60" />
-        <span className="ml-2 text-sm text-gray-500">{t.loading}</span>
+        <span className="ml-2 text-sm text-muted-foreground">{t.loading}</span>
       </div>
     )
   }
 
   if (!message) {
     return (
-      <div className="flex items-center justify-center h-32 text-gray-500">
+      <div className="flex items-center justify-center h-32 text-muted-foreground">
         {t.selectMessage}
       </div>
     )
@@ -176,7 +176,7 @@ export function SharedMessageDetail({
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-base font-bold flex-1">{message.subject}</h3>
         </div>
-        <div className="text-xs text-gray-500 space-y-1">
+        <div className="text-xs text-muted-foreground space-y-1">
           {message.from_address && (
             <p>
               {t.from}: {message.from_address}
@@ -231,7 +231,7 @@ export function SharedMessageDetail({
             {message.content}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-32 text-gray-500 text-sm">
+          <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
             {t.selectMessage}
           </div>
         )}

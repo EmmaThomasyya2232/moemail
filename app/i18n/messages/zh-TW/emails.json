@@ -28,7 +28,9 @@
     "deleteSuccess": "郵箱已刪除",
     "deleteFailed": "刪除郵箱失敗",
     "error": "錯誤",
-    "success": "成功"
+    "success": "成功",
+    "searchPlaceholder": "搜尋郵箱...",
+    "searchNoResult": "沒有符合的郵箱"
   },
   "create": {
     "title": "建立郵箱",
@@ -62,7 +64,8 @@
     "subject": "主旨",
     "date": "日期",
     "loading": "載入中...",
-    "loadingMore": "載入更多..."
+    "loadingMore": "載入更多...",
+    "noSubject": "（無主旨）"
   },
   "send": {
     "title": "發送郵件",
@@ -90,7 +93,10 @@
     "to": "收件者",
     "time": "時間",
     "htmlFormat": "HTML 格式",
-    "textFormat": "純文字格式"
+    "textFormat": "純文字格式",
+    "codeLabel": "驗證碼",
+    "copyCode": "複製驗證碼",
+    "codeCopied": "已複製"
   },
   "share": {
     "title": "分享郵箱",

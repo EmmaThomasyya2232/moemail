@@ -41,7 +41,7 @@ export function SharedErrorPage({
           <Card className="max-w-md mx-auto p-8 text-center space-y-4">
             <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
             <h2 className="text-2xl font-bold">{resolvedError}</h2>
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               {resolvedDescription}
             </p>
           </Card>

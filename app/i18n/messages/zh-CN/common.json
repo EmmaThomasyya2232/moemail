@@ -13,7 +13,9 @@
     "login": "登录",
     "profile": "个人中心",
     "logout": "退出登录",
-    "backToMailbox": "返回邮箱"
+    "backToMailbox": "返回邮箱",
+    "mailbox": "我的邮箱",
+    "domains": "域名"
   },
   "github": "获取网站源代码"
 }

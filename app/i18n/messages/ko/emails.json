@@ -28,7 +28,9 @@
     "deleteSuccess": "이메일이 성공적으로 삭제되었습니다",
     "deleteFailed": "이메일 삭제에 실패했습니다",
     "error": "오류",
-    "success": "성공"
+    "success": "성공",
+    "searchPlaceholder": "이메일함 검색...",
+    "searchNoResult": "일치하는 이메일함이 없습니다"
   },
   "create": {
     "title": "이메일 생성",
@@ -58,7 +60,8 @@
     "subject": "제목",
     "date": "날짜",
     "loading": "로딩 중...",
-    "loadingMore": "더 불러오는 중..."
+    "loadingMore": "더 불러오는 중...",
+    "noSubject": "(제목 없음)"
   },
   "send": {
     "title": "이메일 보내기",
@@ -86,7 +89,10 @@
     "to": "받는 사람",
     "time": "시간",
     "htmlFormat": "HTML 형식",
-    "textFormat": "일반 텍스트 형식"
+    "textFormat": "일반 텍스트 형식",
+    "codeLabel": "인증 코드",
+    "copyCode": "코드 복사",
+    "codeCopied": "복사됨"
   },
   "share": {
     "title": "메일함 공유",

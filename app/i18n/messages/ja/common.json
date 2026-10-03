@@ -13,8 +13,9 @@
     "login": "ログイン",
     "profile": "プロフィール",
     "logout": "ログアウト",
-    "backToMailbox": "メールボックスに戻る"
+    "backToMailbox": "メールボックスに戻る",
+    "mailbox": "マイメールボックス",
+    "domains": "ドメイン"
   },
   "github": "ソースコードを入手"
 }
-

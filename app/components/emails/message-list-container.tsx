@@ -27,52 +27,55 @@ export function MessageListContainer({ email, onMessageSelect, selectedMessageId
     onMessageSelect(null)
   }
 
-  return (
-    <div className="h-full flex flex-col">
-      {canSendEmails ? (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          <div className="p-2 border-b border-primary/20">
-            <SlidingTabsList>
-              <SlidingTabsTrigger value="received">
-                <Inbox className="h-4 w-4" />
-                {t("received")}
-              </SlidingTabsTrigger>
-              <SlidingTabsTrigger value="sent">
-                <Send className="h-4 w-4" />
-                {t("sent")}
-              </SlidingTabsTrigger>
-            </SlidingTabsList>
-          </div>
-          
-          <TabsContent value="received" className="flex-1 overflow-hidden m-0">
-            <MessageList
-              email={email}
-              messageType="received"
-              onMessageSelect={onMessageSelect}
-              selectedMessageId={selectedMessageId}
-            />
-          </TabsContent>
-          
-          <TabsContent value="sent" className="flex-1 overflow-hidden m-0">
-            <MessageList
-              email={email}
-              messageType="sent"
-              onMessageSelect={onMessageSelect}
-              selectedMessageId={selectedMessageId}
-              refreshTrigger={refreshTrigger}
-            />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="flex-1 overflow-hidden">
-          <MessageList
-            email={email}
-            messageType="received"
-            onMessageSelect={onMessageSelect}
-            selectedMessageId={selectedMessageId}
-          />
-        </div>
-      )}
-    </div>
+  // 收件箱 / 已发送切换，直接嵌入消息列表头部
+  const tabs = (
+    <SlidingTabsList>
+      <SlidingTabsTrigger value="received" className="h-7 gap-1.5 text-[12px]">
+        <Inbox className="size-3.5" />
+        {t("received")}
+      </SlidingTabsTrigger>
+      <SlidingTabsTrigger value="sent" className="h-7 gap-1.5 text-[12px]">
+        <Send className="size-3.5" />
+        {t("sent")}
+      </SlidingTabsTrigger>
+    </SlidingTabsList>
   )
-} 
+
+  if (!canSendEmails) {
+    return (
+      <div className="h-full min-h-0">
+        <MessageList
+          email={email}
+          messageType="received"
+          onMessageSelect={onMessageSelect}
+          selectedMessageId={selectedMessageId}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="flex h-full flex-col">
+      <TabsContent value="received" className="m-0 flex-1 overflow-hidden">
+        <MessageList
+          email={email}
+          messageType="received"
+          onMessageSelect={onMessageSelect}
+          selectedMessageId={selectedMessageId}
+          toolbarLeading={tabs}
+        />
+      </TabsContent>
+
+      <TabsContent value="sent" className="m-0 flex-1 overflow-hidden">
+        <MessageList
+          email={email}
+          messageType="sent"
+          onMessageSelect={onMessageSelect}
+          selectedMessageId={selectedMessageId}
+          refreshTrigger={refreshTrigger}
+          toolbarLeading={tabs}
+        />
+      </TabsContent>
+    </Tabs>
+  )
+}

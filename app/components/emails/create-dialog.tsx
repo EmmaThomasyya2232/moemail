@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,9 +17,10 @@ import { useConfig } from "@/hooks/use-config"
 
 interface CreateDialogProps {
   onEmailCreated: () => void
+  trigger?: ReactNode
 }
 
-export function CreateDialog({ onEmailCreated }: CreateDialogProps) {
+export function CreateDialog({ onEmailCreated, trigger }: CreateDialogProps) {
   const { config } = useConfig()
   const t = useTranslations("emails.create")
   const tList = useTranslations("emails.list")
@@ -123,10 +124,12 @@ export function CreateDialog({ onEmailCreated }: CreateDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          {t("title")}
-        </Button>
+        {trigger || (
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            {t("title")}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -227,7 +230,7 @@ export function CreateDialog({ onEmailCreated }: CreateDialogProps) {
                 </div>
               </div>
             ) : (
-              <span className="text-gray-400">...</span>
+              <span className="text-muted-foreground/70">...</span>
             )}
           </div>
         </div>

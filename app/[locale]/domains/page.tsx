@@ -1,15 +1,14 @@
 import { Header } from "@/components/layout/header"
-import { ThreeColumnLayout } from "@/components/emails/three-column-layout"
+import { DomainsView } from "@/components/domains/domains-view"
 import { NoPermissionDialog } from "@/components/no-permission-dialog"
-import { auth } from "@/lib/auth"
+import { auth, checkPermission } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { checkPermission } from "@/lib/auth"
 import { PERMISSIONS } from "@/lib/permissions"
 import type { Locale } from "@/i18n/config"
 
 export const runtime = "edge"
 
-export default async function MoePage({
+export default async function DomainsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -17,7 +16,7 @@ export default async function MoePage({
   const { locale: localeFromParams } = await params
   const locale = localeFromParams as Locale
   const session = await auth()
-  
+
   if (!session?.user) {
     redirect(`/${locale}`)
   }
@@ -29,11 +28,10 @@ export default async function MoePage({
       <div className="container mx-auto h-full px-4 lg:px-8 max-w-[1600px]">
         <Header />
         <main className="h-full">
-          <ThreeColumnLayout />
+          <DomainsView />
           {!hasPermission && <NoPermissionDialog />}
         </main>
       </div>
     </div>
   )
 }
-

@@ -13,7 +13,9 @@
     "login": "Login",
     "profile": "Profile",
     "logout": "Logout",
-    "backToMailbox": "Back to Mailbox"
+    "backToMailbox": "Back to Mailbox",
+    "mailbox": "Mailboxes",
+    "domains": "Domains"
   },
   "github": "Get Source Code"
 }

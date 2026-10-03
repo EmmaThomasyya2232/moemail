@@ -28,7 +28,9 @@
     "deleteSuccess": "邮箱已删除",
     "deleteFailed": "删除邮箱失败",
     "error": "错误",
-    "success": "成功"
+    "success": "成功",
+    "searchPlaceholder": "搜索邮箱...",
+    "searchNoResult": "没有匹配的邮箱"
   },
   "create": {
     "title": "创建邮箱",
@@ -62,7 +64,8 @@
     "subject": "主题",
     "date": "日期",
     "loading": "加载中...",
-    "loadingMore": "加载更多..."
+    "loadingMore": "加载更多...",
+    "noSubject": "（无主题）"
   },
   "send": {
     "title": "发送邮件",
@@ -90,7 +93,10 @@
     "to": "收件人",
     "time": "时间",
     "htmlFormat": "HTML 格式",
-    "textFormat": "纯文本格式"
+    "textFormat": "纯文本格式",
+    "codeLabel": "验证码",
+    "copyCode": "复制验证码",
+    "codeCopied": "已复制"
   },
   "share": {
     "title": "分享邮箱",

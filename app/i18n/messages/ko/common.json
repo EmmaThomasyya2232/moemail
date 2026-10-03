@@ -13,7 +13,9 @@
     "login": "로그인",
     "profile": "프로필",
     "logout": "로그아웃",
-    "backToMailbox": "메일함으로 돌아가기"
+    "backToMailbox": "메일함으로 돌아가기",
+    "mailbox": "메일함",
+    "domains": "도메인"
   },
   "github": "소스 코드 받기"
 }

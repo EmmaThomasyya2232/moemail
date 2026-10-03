@@ -87,7 +87,7 @@ export function EmailServiceConfig() {
   }
 
   return (
-    <div className="bg-background rounded-lg border-2 border-primary/20 p-6">
+    <div className="bg-background rounded-lg border border-border p-6">
       <div className="flex items-center gap-2 mb-6">
         <Zap className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-semibold">{t("title")}</h2>

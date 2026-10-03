@@ -28,7 +28,9 @@
     "deleteSuccess": "Email deleted successfully",
     "deleteFailed": "Failed to delete email",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "searchPlaceholder": "Search mailboxes...",
+    "searchNoResult": "No matching mailbox"
   },
   "create": {
     "title": "Create Email",
@@ -62,7 +64,8 @@
     "subject": "Subject",
     "date": "Date",
     "loading": "Loading...",
-    "loadingMore": "Loading more..."
+    "loadingMore": "Loading more...",
+    "noSubject": "(No subject)"
   },
   "send": {
     "title": "Send Email",
@@ -90,7 +93,10 @@
     "to": "To",
     "time": "Time",
     "htmlFormat": "HTML Format",
-    "textFormat": "Plain Text Format"
+    "textFormat": "Plain Text Format",
+    "codeLabel": "Verification code",
+    "copyCode": "Copy code",
+    "codeCopied": "Copied"
   },
   "share": {
     "title": "Share Mailbox",

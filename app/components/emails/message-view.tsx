@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useTranslations } from "next-intl"
-import { Loader2, Share2 } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
+import { AlertCircle, Check, Copy, Loader2, Share2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
+import { useCopy } from "@/hooks/use-copy"
 import { useToast } from "@/components/ui/use-toast"
 import { ShareMessageDialog } from "./share-message-dialog"
 
@@ -29,6 +30,34 @@ interface MessageViewProps {
 
 type ViewMode = "html" | "text"
 
+// 纯前端提取验证码：优先匹配带关键字的 4-8 位数字
+function extractVerificationCode(message: Message | null): string | null {
+  if (!message) return null
+  const raw = `${message.subject || ""} ${message.content || ""} ${message.html || ""}`
+  const text = raw.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim()
+  if (!text) return null
+
+  const keywordPatterns = [
+    /(?:verification|verify|security|confirmation|one[-\s]?time|passcode|otp|code)\D{0,16}(\d{4,8})/i,
+    /(\d{4,8})\D{0,16}(?:is your|is the)?\s*(?:verification|verify|security|confirmation|one[-\s]?time|passcode|otp|code)/i,
+    /(?:验证码|校验码|动态码|口令|代码|認証コード|인증\s?코드)\D{0,16}(\d{4,8})/,
+    /(\d{4,8})\D{0,12}(?:为您的?|是您的?)?\s*(?:验证码|校验码|动态码|認証コード|인증\s?코드)/
+  ]
+
+  for (const pattern of keywordPatterns) {
+    const match = text.match(pattern)
+    if (match?.[1]) return match[1]
+  }
+
+  // 短邮件（通常是验证类邮件）才回退到任意 4-8 位数字
+  if (text.length <= 400) {
+    const standalone = text.match(/(?:^|[^\d])(\d{4,8})(?!\d)/)
+    if (standalone?.[1]) return standalone[1]
+  }
+
+  return null
+}
+
 export function MessageView({ emailId, messageId, messageType = 'received' }: MessageViewProps) {
   const t = useTranslations("emails.messageView")
   const tList = useTranslations("emails.list")
@@ -36,20 +65,22 @@ export function MessageView({ emailId, messageId, messageType = 'received' }: Me
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("html")
+  const [copied, setCopied] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const { theme } = useTheme()
   const { toast } = useToast()
+  const { copyToClipboard } = useCopy()
 
   useEffect(() => {
     const fetchMessage = async () => {
       try {
         setLoading(true)
         setError(null)
-        
-        const url = `/api/emails/${emailId}/${messageId}${messageType === 'sent' ? '?type=sent' : ''}`;
-        
+
+        const url = `/api/emails/${emailId}/${messageId}${messageType === 'sent' ? '?type=sent' : ''}`
+
         const response = await fetch(url)
-        
+
         if (!response.ok) {
           const errorData = await response.json()
           const errorMessage = (errorData as { error?: string }).error || t("loadError")
@@ -61,7 +92,7 @@ export function MessageView({ emailId, messageId, messageType = 'received' }: Me
           })
           return
         }
-        
+
         const data = await response.json() as { message: Message }
         setMessage(data.message)
         if (!data.message.html) {
@@ -71,7 +102,7 @@ export function MessageView({ emailId, messageId, messageType = 'received' }: Me
         const errorMessage = t("networkError")
         setError(errorMessage)
         toast({
-          title: tList("error"), 
+          title: tList("error"),
           description: errorMessage,
           variant: "destructive"
         })
@@ -83,6 +114,8 @@ export function MessageView({ emailId, messageId, messageType = 'received' }: Me
 
     fetchMessage()
   }, [emailId, messageId, messageType, toast, t, tList])
+
+  const code = extractVerificationCode(message)
 
   const updateIframeContent = () => {
     if (viewMode === "html" && message?.html && iframeRef.current) {
@@ -101,78 +134,23 @@ export function MessageView({ emailId, messageId, messageType = 'received' }: Me
                   margin: 0;
                   padding: 0;
                   min-height: 100%;
-                  font-family: system-ui, -apple-system, sans-serif;
-                  color: ${theme === 'dark' ? '#fff' : '#000'};
-                  background: ${theme === 'dark' ? '#1a1a1a' : '#fff'};
+                  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+                  font-size: 13.5px;
+                  line-height: 1.6;
+                  color: ${theme === 'dark' ? '#e5e7eb' : '#111827'};
+                  background: ${theme === 'dark' ? '#171a21' : '#ffffff'};
+                  word-break: break-word;
                 }
-                body {
-                  padding: 20px;
-                }
-                img {
-                  max-width: 100%;
-                  height: auto;
-                }
-                a {
-                  color: #2563eb;
-                }
-                /* 滚动条样式 */
-                ::-webkit-scrollbar {
-                  width: 6px;
-                  height: 6px;
-                }
-                ::-webkit-scrollbar-track {
-                  background: transparent;
-                }
-                ::-webkit-scrollbar-thumb {
-                  background: ${theme === 'dark'
-                    ? 'rgba(130, 109, 217, 0.3)'
-                    : 'rgba(130, 109, 217, 0.2)'};
-                  border-radius: 9999px;
-                  transition: background-color 0.2s;
-                }
-                ::-webkit-scrollbar-thumb:hover {
-                  background: ${theme === 'dark'
-                    ? 'rgba(130, 109, 217, 0.5)'
-                    : 'rgba(130, 109, 217, 0.4)'};
-                }
-                /* Firefox 滚动条 */
-                * {
-                  scrollbar-width: thin;
-                  scrollbar-color: ${theme === 'dark'
-                    ? 'rgba(130, 109, 217, 0.3) transparent'
-                    : 'rgba(130, 109, 217, 0.2) transparent'};
-                }
+                body { padding: 16px; }
+                img { max-width: 100%; height: auto; }
+                a { color: #7C3AED; }
+                table { max-width: 100%; }
               </style>
             </head>
             <body>${message.html}</body>
           </html>
         `)
         doc.close()
-
-        // 更新高度以填充容器
-        const updateHeight = () => {
-          const container = iframe.parentElement
-          if (container) {
-            iframe.style.height = `${container.clientHeight}px`
-          }
-        }
-
-        updateHeight()
-        window.addEventListener('resize', updateHeight)
-
-        // 监听内容变化
-        const resizeObserver = new ResizeObserver(updateHeight)
-        resizeObserver.observe(doc.body)
-
-        // 监听图片加载
-        doc.querySelectorAll('img').forEach((img: HTMLImageElement) => {
-          img.onload = updateHeight
-        })
-
-        return () => {
-          window.removeEventListener('resize', updateHeight)
-          resizeObserver.disconnect()
-        }
       }
     }
   }
@@ -180,27 +158,42 @@ export function MessageView({ emailId, messageId, messageType = 'received' }: Me
   // 监听主题变化和内容变化
   useEffect(() => {
     updateIframeContent()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message?.html, viewMode, theme])
+
+  const handleCopyCode = async () => {
+    if (!code) return
+    const success = await copyToClipboard(code)
+    if (success) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
+    }
+  }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <Loader2 className="w-5 h-5 animate-spin text-primary/60" />
-        <span className="ml-2 text-sm text-gray-500">{t("loading")}</span>
+      <div className="flex h-full flex-col items-center justify-center gap-2 py-16">
+        <Loader2 className="size-5 animate-spin text-primary/70" />
+        <span className="text-[12px] text-muted-foreground">{t("loading")}</span>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-32 text-center">
-        <p className="text-sm text-destructive mb-2">{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="text-xs text-primary hover:underline"
+      <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+        <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+          <AlertCircle className="size-5" />
+        </div>
+        <p className="max-w-[280px] text-[12px] leading-relaxed text-destructive">{error}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs"
+          onClick={() => window.location.reload()}
         >
           {t("retry")}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -208,74 +201,99 @@ export function MessageView({ emailId, messageId, messageType = 'received' }: Me
   if (!message) return null
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 space-y-3 border-b border-primary/20">
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 space-y-3 border-b px-4 py-3">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-base font-bold flex-1">{message.subject}</h3>
-          <ShareMessageDialog 
+          <h3 className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-snug tracking-tight">
+            {message.subject}
+          </h3>
+          <ShareMessageDialog
             emailId={emailId}
-            messageId={message.id} 
+            messageId={message.id}
             messageSubject={message.subject}
             trigger={
-              <button className="p-1.5 hover:bg-primary/10 rounded-md transition-colors">
-                <Share2 className="h-4 w-4 text-gray-500" />
-              </button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground">
+                <Share2 className="size-3.5" />
+              </Button>
             }
           />
         </div>
-        <div className="text-xs text-gray-500 space-y-1">
+
+        {code && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                {t("codeLabel")}
+              </p>
+              <p className="font-mono text-[18px] font-semibold tracking-[0.2em] text-primary">{code}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 shrink-0 gap-1.5 text-xs"
+              onClick={handleCopyCode}
+            >
+              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copied ? t("codeCopied") : t("copyCode")}
+            </Button>
+          </div>
+        )}
+
+        <div className="grid gap-1 text-[12px]">
           {message.from_address && (
-            <p>{t("from")}: {message.from_address}</p>
+            <div className="flex gap-2">
+              <span className="w-10 shrink-0 text-muted-foreground">{t("from")}</span>
+              <span className="min-w-0 break-all text-foreground/80">{message.from_address}</span>
+            </div>
           )}
           {message.to_address && (
-            <p>{t("to")}: {message.to_address}</p>
+            <div className="flex gap-2">
+              <span className="w-10 shrink-0 text-muted-foreground">{t("to")}</span>
+              <span className="min-w-0 break-all text-foreground/80">{message.to_address}</span>
+            </div>
           )}
-          <p>{t("time")}: {new Date(message.sent_at || message.received_at || 0).toLocaleString()}</p>
+          <div className="flex gap-2">
+            <span className="w-10 shrink-0 text-muted-foreground">{t("time")}</span>
+            <span className="tabular-nums text-foreground/80">
+              {new Date(message.sent_at || message.received_at || 0).toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
-      
+
       {message.html && message.content && (
-        <div className="border-b border-primary/20 p-2">
-          <RadioGroup
-            value={viewMode}
-            onValueChange={(value) => setViewMode(value as ViewMode)}
-            className="flex items-center gap-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="html" id="html" />
-              <Label 
-                htmlFor="html" 
-                className="text-xs cursor-pointer"
+        <div className="flex shrink-0 items-center justify-end border-b px-4 py-1.5">
+          <div className="flex items-center gap-0.5 rounded-md border p-0.5">
+            {(["html", "text"] as ViewMode[]).map(mode => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                className={cn(
+                  "rounded px-2 py-0.5 text-[11px] font-medium transition-colors duration-150",
+                  viewMode === mode
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
               >
-                {t("htmlFormat")}
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="text" id="text" />
-              <Label 
-                htmlFor="text" 
-                className="text-xs cursor-pointer"
-              >
-                {t("textFormat")}
-              </Label>
-            </div>
-          </RadioGroup>
+                {mode === "html" ? t("htmlFormat") : t("textFormat")}
+              </button>
+            ))}
+          </div>
         </div>
       )}
-      
-      <div className="flex-1 overflow-auto relative">
+
+      <div className="relative min-h-0 flex-1 overflow-auto">
         {viewMode === "html" && message.html ? (
           <iframe
             ref={iframeRef}
-            className="absolute inset-0 w-full h-full border-0 bg-transparent"
+            className="absolute inset-0 h-full w-full border-0 bg-transparent"
             sandbox="allow-same-origin allow-popups"
           />
         ) : (
-          <div className="p-4 text-sm whitespace-pre-wrap">
-            {message.content}
-          </div>
+          <div className="whitespace-pre-wrap p-4 text-[13px] leading-relaxed">{message.content}</div>
         )}
       </div>
     </div>
   )
-} 
+}

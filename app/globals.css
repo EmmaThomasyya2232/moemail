@@ -4,48 +4,48 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 220 14% 98%; /* #F8FAFC */
+    --foreground: 220 13% 7%; /* #111827 */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 220 13% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 255 65% 52%;  /* #826DD9 */
+    --popover-foreground: 220 13% 7%;
+    --primary: 262 83% 58%; /* #7C3AED */
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%; /* #6B7280 */
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 9% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 255 65% 52%;  /* #826DD9 */
-    --radius: 0.75rem;
+    --border: 220 13% 91%; /* #E5E7EB */
+    --input: 220 13% 91%;
+    --ring: 262 83% 58%;
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 255 65% 52%;  /* #826DD9 */
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 222 20% 9%;
+    --foreground: 220 14% 95%;
+    --card: 222 20% 12%;
+    --card-foreground: 220 14% 95%;
+    --popover: 222 20% 12%;
+    --popover-foreground: 220 14% 95%;
+    --primary: 262 83% 68%;
+    --primary-foreground: 222 20% 9%;
+    --secondary: 222 18% 16%;
+    --secondary-foreground: 220 14% 95%;
+    --muted: 222 18% 16%;
+    --muted-foreground: 220 9% 68%;
+    --accent: 222 18% 16%;
+    --accent-foreground: 220 14% 95%;
+    --destructive: 0 68% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 255 65% 52%;  /* #826DD9 */
+    --border: 222 18% 19%;
+    --input: 222 18% 19%;
+    --ring: 262 83% 68%;
   }
 }
 
@@ -53,46 +53,74 @@
   * {
     @apply border-border;
   }
+  html, body {
+    @apply h-full;
+  }
   body {
     @apply bg-background text-foreground;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 13.5px;
+    line-height: 1.55;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
+  h1 { @apply text-[22px] font-semibold tracking-tight; }
+  h2 { @apply text-[15px] font-semibold tracking-tight; }
+  h3 { @apply text-[13px] font-semibold tracking-tight; }
 }
 
 @layer utilities {
   .bg-grid-primary {
-    background-image: linear-gradient(var(--primary) 1px, transparent 1px),
-      linear-gradient(90deg, var(--primary) 1px, transparent 1px);
+    background-image: linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
     background-size: 20px 20px;
   }
 
-  /* 整体滚动条 */
+  .app-shell {
+    @apply bg-background text-foreground;
+  }
+
+  .panel {
+    @apply min-h-0 min-w-0 overflow-hidden;
+  }
+
+  .panel-header {
+    @apply flex h-12 shrink-0 items-center justify-between gap-2 border-b px-3;
+  }
+
+  .panel-title {
+    @apply text-[13px] font-semibold tracking-tight;
+  }
+
+  .panel-subtitle {
+    @apply truncate text-[11px] text-muted-foreground;
+  }
+
+  .hover-row {
+    @apply transition-colors duration-150 hover:bg-muted/70;
+  }
+
+  .selected-row {
+    @apply bg-muted;
+  }
+
+  /* Subtle scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
-  /* 滚动条轨道 */
   ::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  /* 滚动条滑块 */
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/20 rounded-full hover:bg-primary/40 transition-colors;
+    @apply rounded-full bg-border transition-colors hover:bg-muted-foreground/40;
   }
 
-  /* Firefox 滚动条 */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary) / 0.2) transparent;
-  }
-
-  /* 深色模式下的滚动条 */
-  .dark ::-webkit-scrollbar-thumb {
-    @apply bg-primary/30 hover:bg-primary/50;
-  }
-
-  .dark * {
-    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+    scrollbar-color: hsl(var(--border)) transparent;
   }
 }
