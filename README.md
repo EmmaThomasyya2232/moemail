@@ -78,7 +78,7 @@ The documentation site contains detailed usage guides, API documentation, deploy
 - **Framework**: [Next.js](https://nextjs.org/) (App Router)
 - **Platform**: [Cloudflare Pages](https://pages.cloudflare.com/)
 - **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite)
-- **Authentication**: [NextAuth](https://authjs.dev/getting-started/installation?framework=Next.js) with GitHub/Google Login
+- **Authentication**: [NextAuth](https://authjs.dev/getting-started/installation?framework=Next.js) with built-in username/password login and optional GitHub/Google Login
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: Custom components based on [Radix UI](https://www.radix-ui.com/)
 - **Email Handling**: [Cloudflare Email Workers](https://developers.cloudflare.com/email-routing/)
@@ -120,7 +120,9 @@ Set Cloudflare D1 database name and database ID.
 ```bash
 cp .env.example .env.local
 ```
-Set `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, `AUTH_SECRET`.
+Set `AUTH_SECRET` (**required**, used to encrypt sessions and salt user passwords, e.g. generate with `openssl rand -base64 32`).
+
+> MoeMail has built-in **username + password** registration/login, so no OAuth app is needed. `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` / `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` are **optional** and only enable the corresponding social login button.
 
 5. Create local database schema:
 ```bash
@@ -180,9 +182,11 @@ This project supports automated deployment using GitHub Actions. It supports the
 1. Add the following Secrets in GitHub repository settings:
    - `CLOUDFLARE_API_TOKEN`: Cloudflare API Token
    - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare Account ID
-   - `AUTH_GITHUB_ID`: GitHub OAuth App ID
-   - `AUTH_GITHUB_SECRET`: GitHub OAuth App Secret
-   - `AUTH_SECRET`: NextAuth Secret, used to encrypt session, please set a random string
+   - `AUTH_SECRET`: **Required**. NextAuth Secret, used to encrypt the session and to salt user passwords, please set a random string
+   - `AUTH_GITHUB_ID`: GitHub OAuth App ID (Optional, only needed for GitHub login)
+   - `AUTH_GITHUB_SECRET`: GitHub OAuth App Secret (Optional, only needed for GitHub login)
+   - `AUTH_GOOGLE_ID`: Google OAuth App ID (Optional, only needed for Google login)
+   - `AUTH_GOOGLE_SECRET`: Google OAuth App Secret (Optional, only needed for Google login)
    - `CUSTOM_DOMAIN`: Custom domain for the website (Optional, if empty, uses Cloudflare Pages default domain)
    - `PROJECT_NAME`: Pages project name (Optional, if empty, defaults to moemail)
    - `DATABASE_NAME`: D1 database name (Optional, if empty, defaults to moemail-db)
@@ -657,11 +661,21 @@ For full documentation, see [packages/mcp/README.md](packages/mcp/README.md).
 ## Environment Variables
 
 ### Authentication
-- `AUTH_GITHUB_ID`: GitHub OAuth App ID
-- `AUTH_GITHUB_SECRET`: GitHub OAuth App Secret
-- `AUTH_GOOGLE_ID`: Google OAuth App ID
-- `AUTH_GOOGLE_SECRET`: Google OAuth App Secret
-- `AUTH_SECRET`: NextAuth Secret
+
+MoeMail ships with a built-in **username + password** registration/login flow, so no OAuth app is required.
+
+- `AUTH_SECRET`: **Required**. NextAuth Secret, used to encrypt the session and to salt user passwords. Please set a random string, e.g. `openssl rand -base64 32`.
+- `AUTH_GITHUB_ID`: Optional. GitHub OAuth App ID
+- `AUTH_GITHUB_SECRET`: Optional. GitHub OAuth App Secret
+- `AUTH_GOOGLE_ID`: Optional. Google OAuth App ID
+- `AUTH_GOOGLE_SECRET`: Optional. Google OAuth App Secret
+
+The social login buttons are only rendered when the matching pair of variables is configured. Leave all four empty (or unset) to run with username + password only.
+
+**Username + password quick start**
+
+1. Visit `/login`, switch to the **Register** tab and create an account. The first user should then visit `/api/roles/init-emperor` to become the site owner (Emperor).
+2. It is recommended to enable Turnstile (`TURNSTILE_ENABLED` / `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` in System Settings) so open registration is protected from abuse.
 
 ### Cloudflare
 - `CLOUDFLARE_API_TOKEN`: Cloudflare API Token
@@ -675,6 +689,8 @@ For full documentation, see [packages/mcp/README.md](packages/mcp/README.md).
 
 ## Github OAuth App Configuration
 
+> Optional: only needed if you want to enable GitHub login. The built-in username + password login works without any OAuth configuration.
+
 1. Login [Github Developer](https://github.com/settings/developers) create new OAuth App
 2. Generate `Client ID` and `Client Secret`
 3. Configure:
@@ -683,6 +699,8 @@ For full documentation, see [packages/mcp/README.md](packages/mcp/README.md).
    - `Authorization callback URL`: `https://<your-domain>/api/auth/callback/github`
 
 ## Google OAuth App Configuration
+
+> Optional: only needed if you want to enable Google login.
 
 1. Visit [Google Cloud Console](https://console.cloud.google.com/) create project
 2. Configure OAuth consent screen

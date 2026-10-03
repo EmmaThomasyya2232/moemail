@@ -20,14 +20,24 @@ const KV_NAMESPACE_ID = process.env.KV_NAMESPACE_ID;
 
 /**
  * 验证必要的环境变量
+ *
+ * 说明：AUTH_SECRET 是必填项，用于加密登录会话以及为用户密码加盐。
+ * GitHub / Google 的 OAuth 变量是可选项，只有需要第三方登录时才需配置。
  */
 const validateEnvironment = () => {
-  const requiredEnvVars = ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"];
+  const requiredEnvVars = ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "AUTH_SECRET"];
   const missing = requiredEnvVars.filter((varName) => !process.env[varName]);
 
   if (missing.length > 0) {
+    const hints: Record<string, string> = {
+      AUTH_SECRET:
+        " (必填，用于加密登录会话，可用 `openssl rand -base64 32` 生成随机字符串)",
+    };
+
     throw new Error(
-      `Missing required environment variables: ${missing.join(", ")}`
+      `Missing required environment variables: ${missing
+        .map((name) => `${name}${hints[name] ?? ""}`)
+        .join(", ")}`
     );
   }
 };
@@ -278,6 +288,8 @@ const pushPagesSecret = () => {
   console.log("🔐 Pushing environment secrets to Pages...");
 
   // 定义运行时所需的环境变量列表
+  // AUTH_GITHUB_* / AUTH_GOOGLE_* 为可选项：留空即不启用对应的社交登录，
+  // 网站默认使用「用户名 + 密码」注册/登录。
   const runtimeEnvVars = [
     'AUTH_GITHUB_ID', 
     'AUTH_GITHUB_SECRET', 

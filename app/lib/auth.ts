@@ -88,6 +88,42 @@ export async function checkPermission(permission: Permission) {
   return hasPermission(userRoleNames as Role[], permission)
 }
 
+/**
+ * 社交登录（GitHub / Google）为可选项。
+ * 只有当对应平台的两个环境变量都配置齐全时，才会注册该 Provider，
+ * 并在登录页展示对应的登录入口。未配置时站点仅提供「用户名 + 密码」方式。
+ */
+export const getSocialLoginAvailability = () => ({
+  github: Boolean(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET),
+  google: Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET),
+})
+
+const getSocialProviders = () => {
+  const availability = getSocialLoginAvailability()
+
+  return [
+    ...(availability.github
+      ? [
+          GitHub({
+            clientId: process.env.AUTH_GITHUB_ID,
+            clientSecret: process.env.AUTH_GITHUB_SECRET,
+            allowDangerousEmailAccountLinking: true,
+            issuer: "https://github.com/login/oauth",
+          }),
+        ]
+      : []),
+    ...(availability.google
+      ? [
+          Google({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+  ]
+}
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -100,17 +136,9 @@ export const {
     accountsTable: accounts,
   }),
   providers: [
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
-      allowDangerousEmailAccountLinking: true,
-      issuer: "https://github.com/login/oauth",
-    }),
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
-    }),
+    // 仅当环境变量配置齐全时才会包含 GitHub / Google
+    ...getSocialProviders(),
+    // 用户名 + 密码登录始终可用，无需任何 OAuth 配置
     CredentialsProvider({
       name: "Credentials",
       credentials: {

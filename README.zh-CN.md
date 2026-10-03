@@ -78,7 +78,7 @@
 - **框架**: [Next.js](https://nextjs.org/) (App Router)
 - **平台**: [Cloudflare Pages](https://pages.cloudflare.com/)
 - **数据库**: [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite)
-- **认证**: [NextAuth](https://authjs.dev/getting-started/installation?framework=Next.js) 配合 GitHub 登录
+- **认证**: [NextAuth](https://authjs.dev/getting-started/installation?framework=Next.js) 内置用户名 + 密码登录，可选 GitHub / Google 登录
 - **样式**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI 组件**: 基于 [Radix UI](https://www.radix-ui.com/) 的自定义组件
 - **邮件处理**: [Cloudflare Email Workers](https://developers.cloudflare.com/email-routing/)
@@ -120,7 +120,9 @@ cp wrangler.cleanup.example.json wrangler.cleanup.json
 ```bash
 cp .env.example .env.local
 ```
-设置 AUTH_GITHUB_ID, AUTH_GITHUB_SECRET, AUTH_SECRET
+设置 `AUTH_SECRET`（**必填**，用于加密登录会话以及为用户密码加盐，可用 `openssl rand -base64 32` 生成随机字符串）。
+
+> MoeMail 已内置**用户名 + 密码**注册/登录，因此**不需要**配置任何 OAuth 应用。`AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` / `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` 均为**可选**，只在需要对应的第三方登录时才填写。
 
 5. 创建本地数据库表结构
 ```bash
@@ -179,9 +181,11 @@ pnpm dlx tsx ./scripts/deploy/index.ts
 1. 在 GitHub 仓库设置中添加以下 Secrets：
    - `CLOUDFLARE_API_TOKEN`: Cloudflare API 令牌
    - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare 账户 ID
-   - `AUTH_GITHUB_ID`: GitHub OAuth App ID
-   - `AUTH_GITHUB_SECRET`: GitHub OAuth App Secret
-   - `AUTH_SECRET`: NextAuth Secret，用来加密 session，请设置一个随机字符串
+   - `AUTH_SECRET`: **必填**。NextAuth Secret，用来加密登录会话以及为用户密码加盐，请设置一个随机字符串
+   - `AUTH_GITHUB_ID`: GitHub OAuth App ID（可选，仅在使用 GitHub 登录时需要）
+   - `AUTH_GITHUB_SECRET`: GitHub OAuth App Secret（可选，仅在使用 GitHub 登录时需要）
+   - `AUTH_GOOGLE_ID`: Google OAuth App ID（可选，仅在使用 Google 登录时需要）
+   - `AUTH_GOOGLE_SECRET`: Google OAuth App Secret（可选，仅在使用 Google 登录时需要）
    - `CUSTOM_DOMAIN`: 网站自定义域名，用于访问 MoeMail (可选， 如果不填, 则会使用 Cloudflare Pages 默认域名)
    - `PROJECT_NAME`: Pages 项目名 （可选，如果不填，则为 moemail） 
    - `DATABASE_NAME`: D1 数据库名称 (可选，如果不填，则为 moemail-db)
@@ -898,11 +902,21 @@ MoeMail 同时提供 [MCP](https://modelcontextprotocol.io) 服务器，让任�
 本项目使用以下环境变量：
 
 ### 认证相关
-- `AUTH_GITHUB_ID`: GitHub OAuth App ID
-- `AUTH_GITHUB_SECRET`: GitHub OAuth App Secret
-- `AUTH_GOOGLE_ID`: Google OAuth App ID
-- `AUTH_GOOGLE_SECRET`: Google OAuth App Secret
-- `AUTH_SECRET`: NextAuth Secret，用来加密 session，请设置一个随机字符串
+
+MoeMail 已内置**用户名 + 密码**注册/登录，**不需要**配置任何 OAuth 应用。
+
+- `AUTH_SECRET`: **必填**。NextAuth Secret，用来加密登录会话以及为用户密码加盐，请设置一个随机字符串，例如 `openssl rand -base64 32`
+- `AUTH_GITHUB_ID`: 可选。GitHub OAuth App ID
+- `AUTH_GITHUB_SECRET`: 可选。GitHub OAuth App Secret
+- `AUTH_GOOGLE_ID`: 可选。Google OAuth App ID
+- `AUTH_GOOGLE_SECRET`: 可选。Google OAuth App Secret
+
+只有对应平台的两个变量都配置齐全时，登录页才会展示该第三方登录按钮；四项全部留空即只使用用户名 + 密码登录。
+
+**用户名 + 密码 快速开始**
+
+1. 打开 `/login`，切换到**注册**标签页创建账号。第一个用户建议再访问 `/api/roles/init-emperor` 成为网站所有者（皇帝）。
+2. 建议在系统设置中开启 Turnstile（`TURNSTILE_ENABLED` / `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY`），避免开放注册被滥用。
 
 ### Cloudflare 配置
 - `CLOUDFLARE_API_TOKEN`: Cloudflare API Token
@@ -916,6 +930,8 @@ MoeMail 同时提供 [MCP](https://modelcontextprotocol.io) 服务器，让任�
 
 ## Github OAuth App 配置
 
+> 可选：只有需要启用 GitHub 登录时才需要配置。内置的用户名 + 密码登录无需任何 OAuth 配置。
+
 1. 登录 [Github Developer](https://github.com/settings/developers) 创建一个新的 OAuth App
 2. 生成一个新的 `Client ID` 和 `Client Secret`
 3. 配置参数：
@@ -924,6 +940,8 @@ MoeMail 同时提供 [MCP](https://modelcontextprotocol.io) 服务器，让任�
    - `Authorization callback URL`: `https://<your-domain>/api/auth/callback/github`
 
 ## Google OAuth App 配置
+
+> 可选：只有需要启用 Google 登录时才需要配置。
 
 1. 访问 [Google Cloud Console](https://console.cloud.google.com/) 创建项目
 2. 配置 OAuth 同意屏幕
