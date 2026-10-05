@@ -205,7 +205,7 @@ export function PromotePanel() {
                 >
                   {user.image ? (
                     <img
-                      src={user.image}
+                      src={user.image.replace(/^http:\/\//, "https://")}
                       alt=""
                       className="w-8 h-8 rounded-full"
                     />

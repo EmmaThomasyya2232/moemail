@@ -25,6 +25,7 @@
     "createSuccess": "API Key を作成しました",
     "createFailed": "API Key の作成に失敗しました",
     "deleteConfirm": "削除の確認",
+    "loginRequired": "ログイン後に API Key を作成・管理できます",
     "deleteDescription": "API Key {name} を削除しますか？この操作は元に戻せません。",
     "deleteSuccess": "API Key を削除しました",
     "deleteFailed": "API Key の削除に失敗しました",

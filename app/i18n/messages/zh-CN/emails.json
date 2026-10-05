@@ -34,6 +34,7 @@
   },
   "create": {
     "title": "创建邮箱",
+    "description": "填写前缀、域名与有效期以创建临时邮箱",
     "name": "邮箱前缀",
     "namePlaceholder": "留空则随机生成",
     "domain": "域名",
@@ -69,6 +70,7 @@
   },
   "send": {
     "title": "发送邮件",
+    "description": "填写收件人、主题与正文后发送",
     "from": "发件人",
     "to": "收件人",
     "toPlaceholder": "收件人邮箱地址",

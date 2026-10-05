@@ -59,7 +59,7 @@ export function registerTools(server: McpServer): void {
         subDomain: z
           .string()
           .optional()
-          .describe("Subdomain prefix placed before the domain (optional, e.g. `edu` → user@edu.domain)"),
+          .describe("Subdomain prefix placed before the domain (optional, e.g. `edu` → user@edu.domain). Pass `\"random\"` to let the server generate one; the result echoes it in `subDomain`."),
         domain: z.string().optional().describe("Email domain (first configured domain if omitted)"),
         expiry: z
           .enum(["1h", "24h", "3d", "permanent"])

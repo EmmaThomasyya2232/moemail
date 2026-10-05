@@ -34,6 +34,7 @@
   },
   "create": {
     "title": "建立郵箱",
+    "description": "填寫前綴、網域與有效期以建立臨時郵箱",
     "name": "郵箱前綴",
     "namePlaceholder": "留空則隨機生成",
     "domain": "網域",
@@ -69,6 +70,7 @@
   },
   "send": {
     "title": "發送郵件",
+    "description": "填寫收件者、主旨與內容後傳送",
     "from": "寄件者",
     "to": "收件者",
     "toPlaceholder": "收件者郵箱地址",

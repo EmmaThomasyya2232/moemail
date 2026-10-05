@@ -474,7 +474,7 @@ Content-Type: application/json
 ```
 参数说明：
 - `name`: 邮箱前缀，可选
-- `subDomain`: 子域名前缀，位于主域名之前，可选。例如 `edu` → `test@edu.moemail.app`
+- `subDomain`: 子域名前缀，位于主域名之前，可选。例如 `edu` → `test@edu.moemail.app`。传 `"random"` 可让服务端随机生成 DNS 安全的前缀，并通过响应中新增的 `subDomain` 字段返回。
 - `expiryTime`: 有效期（毫秒），可选值：3600000（1小时）、86400000（1天）、604800000（7天）、0（永久）
 - `domain`: 邮箱域名，可通过 `/api/config` 接口获取
 

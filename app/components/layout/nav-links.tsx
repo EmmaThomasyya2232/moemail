@@ -19,6 +19,7 @@ export function NavLinks() {
   const items = [
     { href: `/${locale}/moe`, label: t("mailbox") },
     { href: `/${locale}/domains`, label: t("domains") },
+    { href: `/${locale}/api-docs`, label: t("api") },
     { href: `/${locale}/profile`, label: t("profile") },
   ]
 

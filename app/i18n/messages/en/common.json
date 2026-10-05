@@ -15,7 +15,8 @@
     "logout": "Logout",
     "backToMailbox": "Back to Mailbox",
     "mailbox": "Mailboxes",
-    "domains": "Domains"
+    "domains": "Domains",
+    "api": "API"
   },
   "github": "Get Source Code"
 }

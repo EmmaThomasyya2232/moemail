@@ -14,7 +14,7 @@ export function registerCreateCommand(program: Command) {
     .command("create")
     .description("Create a temporary email address")
     .option("--name <name>", "email prefix")
-    .option("--subdomain <subdomain>", "subdomain prefix placed before the domain (optional)")
+    .option("--subdomain <subdomain>", "subdomain prefix placed before the domain (optional, pass \"random\" to auto-generate)")
     .option("--domain <domain>", "email domain")
     .option("--expiry <expiry>", "1h | 24h | 3d | permanent", "1h")
     .action(async (opts) => {

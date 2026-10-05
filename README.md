@@ -470,7 +470,7 @@ Content-Type: application/json
 ```
 Params:
 - `name`: Prefix (optional)
-- `subDomain`: Subdomain prefix placed before the domain (optional). `edu` → `test@edu.moemail.app`
+- `subDomain`: Subdomain prefix placed before the domain (optional). `edu` → `test@edu.moemail.app`. Pass `"random"` to let the server generate a random DNS-safe prefix and return it in the extra `subDomain` response field.
 - `expiryTime`: Validity in ms. 3600000(1h), 86400000(24h), 604800000(7d), 0(Permanent)
 - `domain`: From config
 

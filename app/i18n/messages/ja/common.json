@@ -15,7 +15,8 @@
     "logout": "ログアウト",
     "backToMailbox": "メールボックスに戻る",
     "mailbox": "マイメールボックス",
-    "domains": "ドメイン"
+    "domains": "ドメイン",
+    "api": "API ドキュメント"
   },
   "github": "ソースコードを入手"
 }

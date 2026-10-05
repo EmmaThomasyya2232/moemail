@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { nanoid } from "nanoid"
+import { customAlphabet, nanoid } from "nanoid"
 import { createDb } from "@/lib/db"
 import { emails } from "@/lib/schema"
 import { eq, and, gt, sql } from "drizzle-orm"
@@ -17,6 +17,12 @@ export const runtime = "edge"
 // characters and the whole prefix is limited to 253 characters.
 const SUBDOMAIN_PREFIX_PATTERN =
   /^(?=.{1,253}$)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+
+// 注册机场景：subDomain 传 "random"（不区分大小写）时由服务端随机生成子域名前缀。
+// 仅用 DNS 安全的小写字母+数字，避免 nanoid 默认字符集中的 `_`（非法 DNS 字符）。
+const RANDOM_SUBDOMAIN_SENTINEL = "random"
+const randomSubdomainPrefix = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6)
+const RANDOM_SUBDOMAIN_MAX_ATTEMPTS = 5
 
 export async function POST(request: Request) {
   const db = createDb()
@@ -77,14 +83,20 @@ export async function POST(request: Request) {
     const normalizedSubDomain =
       typeof subDomain === "string" ? subDomain.trim().replace(/^\.+|\.+$/g, "") : ""
 
-    if (normalizedSubDomain && !SUBDOMAIN_PREFIX_PATTERN.test(normalizedSubDomain)) {
+    // "random" 为保留哨兵值：请求服务端随机生成子域名前缀
+    const wantsRandomSubdomain = normalizedSubDomain.toLowerCase() === RANDOM_SUBDOMAIN_SENTINEL
+
+    if (!wantsRandomSubdomain && normalizedSubDomain && !SUBDOMAIN_PREFIX_PATTERN.test(normalizedSubDomain)) {
       return NextResponse.json(
         { error: "无效的子域名前缀" },
         { status: 400 }
       )
     }
 
-    if (normalizedSubDomain && subdomainDomains.length > 0 && !subdomainDomains.includes(domain.trim().toLowerCase())) {
+    const subdomainAllowedForDomain =
+      subdomainDomains.length === 0 || subdomainDomains.includes(domain.trim().toLowerCase())
+
+    if ((wantsRandomSubdomain || normalizedSubDomain) && !subdomainAllowedForDomain) {
       return NextResponse.json(
         {
           code: "SUBDOMAIN_NOT_ENABLED",
@@ -95,16 +107,45 @@ export async function POST(request: Request) {
       )
     }
 
-    const address = `${name || nanoid(8)}@${normalizedSubDomain ? `${normalizedSubDomain}.` : ""}${domain}`
-    const existingEmail = await db.query.emails.findFirst({
-      where: eq(sql`LOWER(${emails.address})`, address.toLowerCase())
-    })
+    const localPart = name || nanoid(8)
+    const buildAddress = (subdomainPrefix: string) =>
+      `${localPart}@${subdomainPrefix ? `${subdomainPrefix}.` : ""}${domain}`
 
-    if (existingEmail) {
-      return NextResponse.json(
-        { error: "该邮箱地址已被使用" },
-        { status: 409 }
-      )
+    let address = ""
+    let generatedSubDomain: string | null = null
+
+    if (wantsRandomSubdomain) {
+      // 随机子域名：生成后逐个查重，撞地址（概率极低）则换一个重试
+      for (let attempt = 0; attempt < RANDOM_SUBDOMAIN_MAX_ATTEMPTS; attempt++) {
+        const candidate = randomSubdomainPrefix()
+        const candidateAddress = buildAddress(candidate)
+        const existing = await db.query.emails.findFirst({
+          where: eq(sql`LOWER(${emails.address})`, candidateAddress.toLowerCase())
+        })
+        if (!existing) {
+          address = candidateAddress
+          generatedSubDomain = candidate
+          break
+        }
+      }
+      if (!address) {
+        return NextResponse.json(
+          { error: "随机子域名生成冲突，请重试" },
+          { status: 503 }
+        )
+      }
+    } else {
+      address = buildAddress(normalizedSubDomain)
+      const existingEmail = await db.query.emails.findFirst({
+        where: eq(sql`LOWER(${emails.address})`, address.toLowerCase())
+      })
+
+      if (existingEmail) {
+        return NextResponse.json(
+          { error: "该邮箱地址已被使用" },
+          { status: 409 }
+        )
+      }
     }
 
     const now = new Date()
@@ -125,7 +166,8 @@ export async function POST(request: Request) {
     
     return NextResponse.json({ 
       id: result[0].id,
-      email: result[0].address 
+      email: result[0].address,
+      ...(generatedSubDomain ? { subDomain: generatedSubDomain } : {})
     })
   } catch (error) {
     console.error('Failed to generate email:', error)

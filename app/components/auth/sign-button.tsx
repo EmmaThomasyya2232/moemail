@@ -41,7 +41,7 @@ export function SignButton({ size = "default" }: SignButtonProps) {
       >
         {session.user.image && (
           <Image
-            src={session.user.image}
+            src={session.user.image.replace(/^http:\/\//, "https://")}
             alt={session.user.name || t("userAvatar")}
             width={24}
             height={24}

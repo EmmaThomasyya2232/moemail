@@ -25,6 +25,7 @@
     "createSuccess": "API Key 建立成功",
     "createFailed": "建立 API Key 失敗",
     "deleteConfirm": "確認刪除",
+    "loginRequired": "登入後可建立和管理 API Key",
     "deleteDescription": "確定要刪除 API Key {name} 嗎？此操作不可恢復。",
     "deleteSuccess": "API Key 已刪除",
     "deleteFailed": "刪除 API Key 失敗",

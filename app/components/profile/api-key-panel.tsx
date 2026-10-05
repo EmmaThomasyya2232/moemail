@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Key, Plus, Loader2, Copy, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { Key, Plus, Loader2, Trash2, Copy } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import {
   Dialog,
@@ -32,11 +32,12 @@ type ApiKey = {
   enabled: boolean
 }
 
-export function ApiKeyPanel() {
+export function ApiKeyPanel({ embedded = false, authed = true, loginHref }: { embedded?: boolean; authed?: boolean; loginHref?: string } = {}) {
   const t = useTranslations("profile.apiKey")
   const tCommon = useTranslations("common.actions")
   const tNoPermission = useTranslations("emails.noPermission")
   const tMessages = useTranslations("emails.messages")
+  const tNav = useTranslations("common.nav")
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [loading, setLoading] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -44,7 +45,6 @@ export function ApiKeyPanel() {
   const [newKey, setNewKey] = useState<string | null>(null)
   const { toast } = useToast()
   const { copyToClipboard } = useCopy()
-  const [showExamples, setShowExamples] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const { checkPermission } = useRolePermission()
   const canManageApiKey = checkPermission(PERMISSIONS.MANAGE_API_KEY)
@@ -155,6 +155,17 @@ export function ApiKeyPanel() {
         variant: "destructive"
       })
     }
+  }
+
+  if (embedded && !authed) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-6 text-center">
+        <p className="text-sm text-muted-foreground">{t("loginRequired")}</p>
+        <Button className="mt-4 gap-2" asChild>
+          <a href={loginHref ?? "/login"}>{tNav("login")}</a>
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -310,278 +321,6 @@ export function ApiKeyPanel() {
                   </div>
                 ))}
 
-                <div className="mt-8 space-y-4">
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => setShowExamples(!showExamples)}
-                  >
-                    {showExamples ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    {t("viewDocs")}
-                  </button>
-
-                  {showExamples && (
-                    <div className="rounded-lg border bg-card p-4 space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.getConfig")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl ${window.location.protocol}//${window.location.host}/api/config \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl ${window.location.protocol}//${window.location.host}/api/config \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.generateEmail")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl -X POST ${window.location.protocol}//${window.location.host}/api/emails/generate \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "test",
-    "subDomain": "edu",
-    "expiryTime": 3600000,
-    "domain": "moemail.app"
-  }'`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl -X POST ${window.location.protocol}//${window.location.host}/api/emails/generate \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "test",
-    "subDomain": "edu",
-    "expiryTime": 3600000,
-    "domain": "moemail.app"
-  }'`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.getEmails")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl ${window.location.protocol}//${window.location.host}/api/emails?cursor=CURSOR \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl ${window.location.protocol}//${window.location.host}/api/emails?cursor=CURSOR \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.getMessages")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}?cursor=CURSOR \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}?cursor=CURSOR \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.getMessage")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/{messageId} \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/{messageId} \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.createEmailShare")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl -X POST ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/share \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"expiresIn": 86400000}'`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl -X POST ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/share \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"expiresIn": 86400000}'`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.getEmailShares")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/share \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/share \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.deleteEmailShare")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl -X DELETE ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/share/{shareId} \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl -X DELETE ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/share/{shareId} \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.createMessageShare")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl -X POST ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/messages/{messageId}/share \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"expiresIn": 0}'`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl -X POST ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/messages/{messageId}/share \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"expiresIn": 0}'`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.getMessageShares")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/messages/{messageId}/share \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/messages/{messageId}/share \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium">{t("docs.deleteMessageShare")}</div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(
-                              `curl -X DELETE ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/messages/{messageId}/share/{shareId} \\
-  -H "X-API-Key: YOUR_API_KEY"`
-                            )}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <pre className="text-xs bg-muted/50 rounded-lg p-4 overflow-x-auto">
-                          {`curl -X DELETE ${window.location.protocol}//${window.location.host}/api/emails/{emailId}/messages/{messageId}/share/{shareId} \\
-  -H "X-API-Key: YOUR_API_KEY"`}
-                        </pre>
-                      </div>
-
-                      <div className="text-xs text-muted-foreground mt-4">
-                        <p>{t("docs.notes")}</p>
-                        <ul className="list-disc list-inside space-y-1 mt-2">
-                          <li>{t("docs.note1")}</li>
-                          <li>{t("docs.note2")}</li>
-                          <li>{t("docs.note3")}</li>
-                          <li>{t("docs.note4")}</li>
-                          <li>{t("docs.note5")}</li>
-                          <li>{t("docs.note6")}</li>
-                          <li>{t("docs.note7")}</li>
-                          <li>{t("docs.note8")}</li>
-                          <li>{t("docs.note9")}</li>
-                          <li>{t("docs.note10")}</li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </>
             )}
           </div>

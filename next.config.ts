@@ -21,6 +21,14 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'thirdqq.qlogo.cn',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.qlogo.cn',
+      },
+      {
+        protocol: 'https',
         hostname: '*.googleusercontent.com',
       }
     ],

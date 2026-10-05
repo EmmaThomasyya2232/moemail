@@ -25,6 +25,7 @@
     "createSuccess": "API key created successfully",
     "createFailed": "Failed to create API key",
     "deleteConfirm": "Confirm Delete",
+    "loginRequired": "Sign in to create and manage API Keys",
     "deleteDescription": "Are you sure you want to delete API key {name}? This action cannot be undone.",
     "deleteSuccess": "API key deleted successfully",
     "deleteFailed": "Failed to delete API key",

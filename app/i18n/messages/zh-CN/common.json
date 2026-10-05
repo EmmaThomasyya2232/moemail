@@ -15,7 +15,8 @@
     "logout": "退出登录",
     "backToMailbox": "返回邮箱",
     "mailbox": "我的邮箱",
-    "domains": "域名"
+    "domains": "域名",
+    "api": "API 文档"
   },
   "github": "获取网站源代码"
 }

@@ -77,7 +77,7 @@ export function ProfileCard({ user }: ProfileCardProps) {
           <div className="relative">
             {user.image && (
               <Image
-                src={user.image}
+                src={user.image.replace(/^http:\/\//, "https://")}
                 alt={user.name || tAuth("userAvatar")}
                 width={80}
                 height={80}
