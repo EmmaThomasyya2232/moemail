@@ -101,8 +101,12 @@ export function DomainsView() {
 
   const roleLabel = (role?: string) => {
     if (!role) return "-"
-    const known = ["DUKE", "KNIGHT", "CIVILIAN"]
-    return known.includes(role) ? tCard(`roles.${role}`) : role
+    const key = String(role).toUpperCase()
+    const known = ["EMPEROR", "DUKE", "KNIGHT", "CIVILIAN"] as const
+    if ((known as readonly string[]).includes(key)) {
+      return tCard(`roles.${key}`)
+    }
+    return String(role)
   }
 
   if (loading && !config) {
