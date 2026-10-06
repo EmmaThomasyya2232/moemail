@@ -11,6 +11,9 @@ interface Config {
   emailDomainsArray: string[]
   emailSubdomainDomains: string
   emailSubdomainDomainsArray: string[]
+  emailDisabledDomains: string
+  emailDisabledDomainsArray: string[]
+  emailEnabledDomainsArray: string[]
   adminContact: string
   maxEmails: number
 }
@@ -33,15 +36,23 @@ const useConfigStore = create<ConfigStore>((set) => ({
       if (!res.ok) throw new Error("获取配置失败")
       const data = await res.json() as Config
       const emailSubdomainDomains = data.emailSubdomainDomains ?? ""
+      const emailDisabledDomains = data.emailDisabledDomains ?? ""
+      const domains = data.emailDomains.split(',')
+      const disabled = emailDisabledDomains
+        ? emailDisabledDomains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
+        : []
       set({
         config: {
           defaultRole: data.defaultRole || ROLES.CIVILIAN,
           emailDomains: data.emailDomains,
-          emailDomainsArray: data.emailDomains.split(','),
+          emailDomainsArray: domains,
           emailSubdomainDomains,
           emailSubdomainDomainsArray: emailSubdomainDomains
             ? emailSubdomainDomains.split(',').map(d => d.trim()).filter(Boolean)
             : [],
+          emailDisabledDomains,
+          emailDisabledDomainsArray: disabled,
+          emailEnabledDomainsArray: domains.filter(d => !disabled.includes(d.trim().toLowerCase())),
           adminContact: data.adminContact || "",
           maxEmails: Number(data.maxEmails) || EMAIL_CONFIG.MAX_ACTIVE_EMAILS
         },

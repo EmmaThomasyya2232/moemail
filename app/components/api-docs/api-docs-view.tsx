@@ -235,13 +235,13 @@ function markdownFor(base: string, t: (key: string) => string, epNotes: (key: st
   out.push("")
   out.push(`## ${t("errorsTitle")}`)
   out.push("")
-  for (const k of ["err401", "err403", "err404", "err409", "err503", "errSubdomain"]) {
+  for (const k of ["err401", "err403", "err404", "err409", "err503", "errSubdomain", "errDomainDisabled"]) {
     out.push(`- ${t(k)}`)
   }
   out.push("")
   out.push(`## ${t("notesTitle")}`)
   out.push("")
-  for (const k of ["note1", "note2", "note3", "note4", "note5", "note6"]) {
+  for (const k of ["note1", "note2", "note2b", "note3", "note4", "note5", "note6"]) {
     out.push(`- ${t(k)}`)
   }
   out.push("")
@@ -351,7 +351,7 @@ export function ApiDocsView({ baseUrl, authed }: { baseUrl: string; authed: bool
           <h2 className="text-[14px] font-semibold tracking-tight">{t("errorsTitle")}</h2>
         </div>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] leading-relaxed text-muted-foreground">
-          {["err401", "err403", "err404", "err409", "err503", "errSubdomain"].map((k) => (
+          {["err401", "err403", "err404", "err409", "err503", "errSubdomain", "errDomainDisabled"].map((k) => (
             <li key={k}>{t(k)}</li>
           ))}
         </ul>
@@ -360,7 +360,7 @@ export function ApiDocsView({ baseUrl, authed }: { baseUrl: string; authed: bool
       <section className="mt-4 rounded-lg border bg-card p-4">
         <h2 className="text-[14px] font-semibold tracking-tight">{t("notesTitle")}</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] leading-relaxed text-muted-foreground">
-          {["note1", "note2", "note3", "note4", "note5", "note6"].map((k) => (
+          {["note1", "note2", "note2b", "note3", "note4", "note5", "note6"].map((k) => (
             <li key={k}>{t(k)}</li>
           ))}
         </ul>

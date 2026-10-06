@@ -68,15 +68,30 @@ export async function POST(request: Request) {
 
     const domainString = await env.SITE_CONFIG.get("EMAIL_DOMAINS")
     const subdomainString = await env.SITE_CONFIG.get("EMAIL_SUBDOMAIN_DOMAINS")
+    const disabledString = await env.SITE_CONFIG.get("EMAIL_DISABLED_DOMAINS")
     const domains = domainString ? domainString.split(',') : ["moemail.app"]
     const subdomainDomains = subdomainString
       ? subdomainString.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
+      : []
+    const disabledDomains = disabledString
+      ? disabledString.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
       : []
 
     if (!domains || !domains.includes(domain)) {
       return NextResponse.json(
         { error: "无效的域名" },
         { status: 400 }
+      )
+    }
+
+    if (disabledDomains.includes(domain.trim().toLowerCase())) {
+      return NextResponse.json(
+        {
+          code: "DOMAIN_DISABLED",
+          error: "该域名已停用，无法创建邮箱，请更换域名或联系管理员",
+          domain,
+        },
+        { status: 403 }
       )
     }
 

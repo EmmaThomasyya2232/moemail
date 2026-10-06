@@ -108,6 +108,7 @@
     "addDomain": "Add",
     "removeDomain": "Remove",
     "subdomainEnabled": "Subdomain mail",
+    "domainEnabled": "Domain enabled",
     "subdomainHint": "When off, creating xxx@sub.domain with this domain is rejected by UI and API, so no undeliverable mailbox is created. Subdomains still need wildcard MX (*.domain) plus Catch-all to a Worker in the same account.",
     "adminContact": "Admin Contact",
     "adminContactPlaceholder": "Email or other contact method",

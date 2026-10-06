@@ -108,6 +108,7 @@
     "addDomain": "添加",
     "removeDomain": "删除",
     "subdomainEnabled": "子域邮箱",
+    "domainEnabled": "域名启用",
     "subdomainHint": "关闭后，用户和 API 用该域名加子域名前缀（如 xxx@edu.域名）会直接报错，避免建出收不到信的邮箱。子域要生效，该域名仍需配好通配 MX（*.域名）和 Catch-all 到同账号 Worker。",
     "adminContact": "管理员联系方式",
     "adminContactPlaceholder": "邮箱或其他联系方式",

@@ -25,6 +25,7 @@ export function WebsiteConfigPanel() {
   const [domains, setDomains] = useState<string[]>([])
   const [domainInput, setDomainInput] = useState<string>("")
   const [subdomainEnabled, setSubdomainEnabled] = useState<Record<string, boolean>>({})
+  const [domainEnabled, setDomainEnabled] = useState<Record<string, boolean>>({})
   const [adminContact, setAdminContact] = useState<string>("")
   const [maxEmails, setMaxEmails] = useState<string>(EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString())
   const [turnstileEnabled, setTurnstileEnabled] = useState(false)
@@ -45,6 +46,7 @@ export function WebsiteConfigPanel() {
         defaultRole: Exclude<Role, typeof ROLES.EMPEROR>,
         emailDomains: string,
         emailSubdomainDomains?: string,
+        emailDisabledDomains?: string,
         adminContact: string,
         maxEmails: string,
         turnstile?: {
@@ -66,6 +68,13 @@ export function WebsiteConfigPanel() {
       setSubdomainEnabled(
         Object.fromEntries(list.map(d => [d, enabled.length === 0 || enabled.includes(d)]))
       )
+      const disabled = (data.emailDisabledDomains || "")
+        .split(",")
+        .map(d => d.trim().toLowerCase())
+        .filter(Boolean)
+      setDomainEnabled(
+        Object.fromEntries(list.map(d => [d, !disabled.includes(d)]))
+      )
       setAdminContact(data.adminContact)
       setMaxEmails(data.maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString())
       setTurnstileEnabled(Boolean(data.turnstile?.enabled))
@@ -82,6 +91,7 @@ export function WebsiteConfigPanel() {
     }
     setDomains(prev => [...prev, value])
     setSubdomainEnabled(prev => ({ ...prev, [value]: true }))
+    setDomainEnabled(prev => ({ ...prev, [value]: true }))
     setDomainInput("")
   }
 
@@ -92,12 +102,18 @@ export function WebsiteConfigPanel() {
       delete next[domain]
       return next
     })
+    setDomainEnabled(prev => {
+      const next = { ...prev }
+      delete next[domain]
+      return next
+    })
   }
 
   const handleSave = async () => {
     setLoading(true)
     try {
       const allowed = domains.filter(d => subdomainEnabled[d] !== false)
+      const enabled = domains.filter(d => domainEnabled[d] !== false)
       const res = await fetch("/api/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,6 +121,7 @@ export function WebsiteConfigPanel() {
           defaultRole,
           emailDomains: domains.join(","),
           emailSubdomainDomains: allowed.length === domains.length ? "" : allowed.join(","),
+          emailDisabledDomains: enabled.length === domains.length ? "" : domains.filter(d => !enabled.includes(d)).join(","),
           adminContact,
           maxEmails: maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString(),
           turnstile: {
@@ -179,6 +196,14 @@ export function WebsiteConfigPanel() {
               {domains.map(domain => (
                 <div key={domain} className="flex items-center gap-3 px-3 py-2">
                   <span className="min-w-0 flex-1 truncate font-mono text-[13px]">@{domain}</span>
+                  <Label htmlFor={`enabled-${domain}`} className="shrink-0 text-[11px] text-muted-foreground">
+                    {t("domainEnabled")}
+                  </Label>
+                  <Switch
+                    id={`enabled-${domain}`}
+                    checked={domainEnabled[domain] !== false}
+                    onCheckedChange={(v) => setDomainEnabled(prev => ({ ...prev, [domain]: v }))}
+                  />
                   <Label htmlFor={`sub-${domain}`} className="shrink-0 text-[11px] text-muted-foreground">
                     {t("subdomainEnabled")}
                   </Label>

@@ -69,7 +69,8 @@ export function DomainsView() {
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null)
   const [copiedValue, setCopiedValue] = useState<string | null>(null)
 
-  const domains = useMemo(() => config?.emailDomainsArray ?? [], [config])
+  const domains = useMemo(() => config?.emailEnabledDomainsArray ?? config?.emailDomainsArray ?? [], [config])
+  const totalDomains = config?.emailDomainsArray.length ?? domains.length
   const subdomainDomains = config?.emailSubdomainDomainsArray ?? []
   // 与创建邮箱弹窗保持一致：子域名单为空表示「所有域名都允许子域名」
   const subdomainForAll = subdomainDomains.length === 0
@@ -145,7 +146,7 @@ export function DomainsView() {
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-[13px] font-semibold tracking-tight">{t("title")}</span>
           <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground">
-            {t("count", { count: domains.length })}
+            {t("count", { count: totalDomains })}
           </span>
         </div>
       </div>
@@ -207,7 +208,7 @@ export function DomainsView() {
               <Globe className="size-4" />
             </div>
             <p className="max-w-[200px] text-[12px] leading-relaxed text-muted-foreground">
-              {domains.length === 0 ? t("noDomains") : t("searchNoResult")}
+              {totalDomains === 0 ? t("noDomains") : t("searchNoResult")}
             </p>
           </div>
         )}

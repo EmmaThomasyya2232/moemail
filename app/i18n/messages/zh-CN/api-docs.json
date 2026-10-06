@@ -26,6 +26,7 @@
   "notesTitle": "注意事项",
   "note1": "把示例中的 YOUR_API_KEY 替换为你的真实 Key；{emailId}、{messageId}、{shareId} 替换为真实 id。",
   "note2": "domain 必须是 /api/config 返回的 emailDomains 中的域名，否则返回「无效的域名」。",
+  "note2b": "域名可在管理后台单独停用：停用后网页创建弹窗不再列出该域名，API 直接调用返回 403 DOMAIN_DISABLED。",
   "note3": "expiryTime 单位为毫秒：3600000（1 小时）、86400000（1 天）、259200000（3 天）、0（永久）。",
   "note4": "subDomain 传 \"random\" 可让服务端随机生成 DNS 安全前缀，生成结果通过响应的 subDomain 字段返回。",
   "note5": "cursor 用于分页：取上一次响应的 nextCursor 传入；为空表示没有更多数据。",
@@ -36,6 +37,7 @@
   "err409": "409 冲突：该邮箱地址已被使用，换个前缀或加子域名重试。",
   "err503": "503 随机子域名多次冲突：概率极低，直接重试即可。",
   "errSubdomain": "SUBDOMAIN_NOT_ENABLED（400）：该域名未开启子域名邮箱，清空 subDomain 后重试或联系管理员。",
+  "errDomainDisabled": "DOMAIN_DISABLED（403）：该域名已停用，无法创建邮箱，请更换域名或联系管理员。",
   "ep": {
     "getConfig": { "t": "获取系统配置", "d": "返回默认角色、可用域名列表、子域名策略、邮箱上限与管理员联系方式。" },
     "generate": { "t": "生成临时邮箱", "d": "name 省略则随机生成 8 位前缀；subDomain 可选，传 \"random\" 由服务端随机生成。" },

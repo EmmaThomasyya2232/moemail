@@ -26,6 +26,7 @@
   "notesTitle": "Notes",
   "note1": "Replace YOUR_API_KEY in the examples with your real key; replace {emailId}, {messageId} and {shareId} with real ids.",
   "note2": "domain must be one of emailDomains returned by /api/config, otherwise you get \"invalid domain\".",
+  "note2b": "A domain can be disabled in the admin panel: it disappears from the web create dialog and direct API calls return 403 DOMAIN_DISABLED.",
   "note3": "expiryTime is in milliseconds: 3600000 (1 hour), 86400000 (1 day), 259200000 (3 days), 0 (permanent).",
   "note4": "Pass \"random\" as subDomain to let the server generate a DNS-safe prefix; it is echoed in the subDomain response field.",
   "note5": "cursor is for pagination: pass nextCursor from the previous response; empty means no more data.",
@@ -36,6 +37,7 @@
   "err409": "409 Conflict: the address is already taken; try another prefix or add a subdomain.",
   "err503": "503 Random subdomain collided several times: extremely unlikely, just retry.",
   "errSubdomain": "SUBDOMAIN_NOT_ENABLED (400): subdomain mail is disabled for this domain; retry with an empty subDomain or ask the admin.",
+  "errDomainDisabled": "DOMAIN_DISABLED (403): this domain is disabled and cannot create mailboxes; switch domains or contact the admin.",
   "ep": {
     "getConfig": { "t": "Get system config", "d": "Returns the default role, available domain list, subdomain policy, mailbox limit and admin contact." },
     "generate": { "t": "Generate temp mailbox", "d": "Omit name for a random 8-char prefix; subDomain is optional, pass \"random\" for a server-generated one." },

@@ -36,10 +36,11 @@ export function CreateDialog({ onEmailCreated, trigger }: CreateDialogProps) {
   const { copyToClipboard } = useCopy()
 
   const domains = config?.emailDomainsArray ?? []
+  const enabledDomains = config?.emailEnabledDomainsArray ?? domains
   const subdomainDomains = config?.emailSubdomainDomainsArray ?? []
   const subdomainEnabledForCurrent =
     subdomainDomains.length === 0 || subdomainDomains.includes(currentDomain)
-  const filteredDomains = domains.filter(d =>
+  const filteredDomains = enabledDomains.filter(d =>
     d.toLowerCase().includes(domainSearch.trim().toLowerCase())
   )
 
@@ -110,10 +111,16 @@ export function CreateDialog({ onEmailCreated, trigger }: CreateDialogProps) {
   }
 
   useEffect(() => {
-    if ((config?.emailDomainsArray?.length ?? 0) > 0) {
-      setCurrentDomain(config?.emailDomainsArray[0] ?? "")
+    if (enabledDomains.length > 0 && !enabledDomains.includes(currentDomain)) {
+      setCurrentDomain(enabledDomains[0])
     }
-  }, [config])
+  }, [enabledDomains, currentDomain])
+
+  useEffect(() => {
+    if ((config?.emailDomainsArray?.length ?? 0) > 0 && enabledDomains.length === 0) {
+      setCurrentDomain("")
+    }
+  }, [config, enabledDomains.length])
 
   useEffect(() => {
     if (!subdomainEnabledForCurrent && subDomain.trim()) {

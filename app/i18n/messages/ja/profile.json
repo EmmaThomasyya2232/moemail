@@ -105,6 +105,8 @@
     "defaultRole": "新規ユーザーのデフォルトロール",
     "emailDomains": "メールボックスドメイン",
     "emailDomainsPlaceholder": "複数のドメインはカンマで区切ります",
+    "subdomainEnabled": "サブドメインメール",
+    "domainEnabled": "ドメイン有効",
     "adminContact": "管理者連絡先",
     "adminContactPlaceholder": "メールまたはその他の連絡先",
     "maxEmails": "ユーザーあたりの最大メールボックス数",

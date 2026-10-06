@@ -108,6 +108,7 @@
     "addDomain": "新增",
     "removeDomain": "刪除",
     "subdomainEnabled": "子網域郵箱",
+    "domainEnabled": "網域啟用",
     "subdomainHint": "關閉後，使用該網域加子網域前綴（如 xxx@edu.網域）會直接被拒收，避免建立收不到信的郵箱。子網域仍需設定萬用 MX（*.網域）和 Catch-all 到相同帳號的 Worker。",
     "adminContact": "管理員聯絡方式",
     "adminContactPlaceholder": "郵箱或其他聯絡方式",
