@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { signIn } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { useToast } from "@/components/ui/use-toast"
@@ -36,6 +36,7 @@ interface SocialProviderAvailability {
 interface LoginFormProps {
   turnstile?: TurnstileConfigProps
   providers?: SocialProviderAvailability
+  registrationEnabled?: boolean
 }
 
 interface FormErrors {
@@ -44,7 +45,7 @@ interface FormErrors {
   confirmPassword?: string
 }
 
-export function LoginForm({ turnstile, providers }: LoginFormProps) {
+export function LoginForm({ turnstile, providers, registrationEnabled = true }: LoginFormProps) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -55,6 +56,22 @@ export function LoginForm({ turnstile, providers }: LoginFormProps) {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login")
   const { toast } = useToast()
   const t = useTranslations("auth.loginForm")
+
+  const clearForm = () => {
+    setUsername("")
+    setPassword("")
+    setConfirmPassword("")
+    setErrors({})
+  }
+
+  // 关闭开放注册时强制停留在登录 Tab，避免切到不存在的注册面板
+  useEffect(() => {
+    if (!registrationEnabled) {
+      setActiveTab("login")
+      clearForm()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrationEnabled])
 
   const turnstileSiteKey = turnstile?.siteKey ?? ""
   const turnstileEnabled = Boolean(turnstile?.enabled && turnstileSiteKey)
@@ -79,13 +96,6 @@ export function LoginForm({ turnstile, providers }: LoginFormProps) {
       variant: "destructive",
     })
     return false
-  }
-
-  const clearForm = () => {
-    setUsername("")
-    setPassword("")
-    setConfirmPassword("")
-    setErrors({})
   }
 
   const handleTabChange = (value: string) => {
@@ -227,10 +237,17 @@ export function LoginForm({ turnstile, providers }: LoginFormProps) {
       </CardHeader>
       <CardContent className="px-6">
         <Tabs value={activeTab} className="w-full" onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="login">{t("tabs.login")}</TabsTrigger>
-            <TabsTrigger value="register">{t("tabs.register")}</TabsTrigger>
-          </TabsList>
+          {registrationEnabled ? (
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="login">{t("tabs.login")}</TabsTrigger>
+              <TabsTrigger value="register">{t("tabs.register")}</TabsTrigger>
+            </TabsList>
+          ) : (
+            <div className="mb-6 rounded-lg border border-dashed p-3 text-center">
+              <p className="text-[13px] font-medium">{t("toast.registrationDisabled")}</p>
+              <p className="mt-1 text-[12px] text-muted-foreground">{t("toast.registrationDisabledDesc")}</p>
+            </div>
+          )}
           <div className="min-h-[220px]">
             <TabsContent value="login" className="space-y-4 mt-0">
               <div className="space-y-3">

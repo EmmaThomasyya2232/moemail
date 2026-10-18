@@ -28,6 +28,7 @@ export function WebsiteConfigPanel() {
   const [domainEnabled, setDomainEnabled] = useState<Record<string, boolean>>({})
   const [adminContact, setAdminContact] = useState<string>("")
   const [maxEmails, setMaxEmails] = useState<string>(EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString())
+  const [registrationEnabled, setRegistrationEnabled] = useState(true)
   const [turnstileEnabled, setTurnstileEnabled] = useState(false)
   const [turnstileSiteKey, setTurnstileSiteKey] = useState("")
   const [turnstileSecretKey, setTurnstileSecretKey] = useState("")
@@ -49,6 +50,7 @@ export function WebsiteConfigPanel() {
         emailDisabledDomains?: string,
         adminContact: string,
         maxEmails: string,
+        registrationEnabled?: boolean,
         turnstile?: {
           enabled: boolean,
           siteKey: string,
@@ -77,6 +79,7 @@ export function WebsiteConfigPanel() {
       )
       setAdminContact(data.adminContact)
       setMaxEmails(data.maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString())
+      setRegistrationEnabled(data.registrationEnabled ?? true)
       setTurnstileEnabled(Boolean(data.turnstile?.enabled))
       setTurnstileSiteKey(data.turnstile?.siteKey ?? "")
       setTurnstileSecretKey(data.turnstile?.secretKey ?? "")
@@ -124,6 +127,7 @@ export function WebsiteConfigPanel() {
           emailDisabledDomains: enabled.length === domains.length ? "" : domains.filter(d => !enabled.includes(d)).join(","),
           adminContact,
           maxEmails: maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString(),
+          registrationEnabled,
           turnstile: {
             enabled: turnstileEnabled,
             siteKey: turnstileSiteKey,
@@ -156,6 +160,22 @@ export function WebsiteConfigPanel() {
         <h2 className="text-sm font-semibold">{t("title")}</h2>
       </div>
       <div className="space-y-4 px-4 py-4 sm:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <Label htmlFor="registration-enabled" className="text-[13px] font-medium">
+              {t("registrationEnabled")}
+            </Label>
+            <p className="text-[11px] text-muted-foreground">
+              {t("registrationEnabledDescription")}
+            </p>
+          </div>
+          <Switch
+            id="registration-enabled"
+            checked={registrationEnabled}
+            onCheckedChange={setRegistrationEnabled}
+          />
+        </div>
+
         <div className="flex items-center gap-3">
           <span className="shrink-0 text-[13px] text-muted-foreground">{t("defaultRole")}</span>
           <div className="flex-1">

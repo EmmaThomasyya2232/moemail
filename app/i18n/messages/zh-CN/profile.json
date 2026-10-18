@@ -113,6 +113,8 @@
     "adminContact": "管理员联系方式",
     "adminContactPlaceholder": "邮箱或其他联系方式",
     "maxEmails": "每个用户最大邮箱数",
+    "registrationEnabled": "开放注册",
+    "registrationEnabledDescription": "关闭后，新用户无法自助注册，只能由管理员创建或等待开放",
     "turnstile": {
       "enable": "启用 Cloudflare Turnstile",
       "enableDescription": "开启后，账号登录与注册将需要通过 Turnstile 验证",

@@ -113,6 +113,8 @@
     "adminContact": "Admin Contact",
     "adminContactPlaceholder": "Email or other contact method",
     "maxEmails": "Max Emails per User",
+    "registrationEnabled": "Open Registration",
+    "registrationEnabledDescription": "When off, new users cannot sign up by themselves",
     "turnstile": {
       "enable": "Enable Cloudflare Turnstile",
       "enableDescription": "When enabled, username/password login and registration require Turnstile verification",

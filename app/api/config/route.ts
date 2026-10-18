@@ -16,6 +16,7 @@ export async function GET() {
     emailDisabledDomains,
     adminContact,
     maxEmails,
+    registrationEnabled,
     turnstileEnabled,
     turnstileSiteKey,
     turnstileSecretKey
@@ -26,6 +27,7 @@ export async function GET() {
     env.SITE_CONFIG.get("EMAIL_DISABLED_DOMAINS"),
     env.SITE_CONFIG.get("ADMIN_CONTACT"),
     env.SITE_CONFIG.get("MAX_EMAILS"),
+    env.SITE_CONFIG.get("REGISTRATION_ENABLED"),
     env.SITE_CONFIG.get("TURNSTILE_ENABLED"),
     env.SITE_CONFIG.get("TURNSTILE_SITE_KEY"),
     env.SITE_CONFIG.get("TURNSTILE_SECRET_KEY")
@@ -38,6 +40,7 @@ export async function GET() {
     emailDisabledDomains: emailDisabledDomains || "",
     adminContact: adminContact || "",
     maxEmails: maxEmails || EMAIL_CONFIG.MAX_ACTIVE_EMAILS.toString(),
+    registrationEnabled: registrationEnabled !== "false",
     turnstile: canManageConfig ? {
       enabled: turnstileEnabled === "true",
       siteKey: turnstileSiteKey || "",
@@ -62,6 +65,7 @@ export async function POST(request: Request) {
     emailDisabledDomains,
     adminContact,
     maxEmails,
+    registrationEnabled,
     turnstile
   } = await request.json() as { 
     defaultRole: Exclude<Role, typeof ROLES.EMPEROR>,
@@ -70,6 +74,7 @@ export async function POST(request: Request) {
     emailDisabledDomains?: string,
     adminContact: string,
     maxEmails: string,
+    registrationEnabled?: boolean,
     turnstile?: {
       enabled: boolean,
       siteKey: string,
@@ -99,6 +104,7 @@ export async function POST(request: Request) {
     env.SITE_CONFIG.put("EMAIL_DISABLED_DOMAINS", emailDisabledDomains ?? ""),
     env.SITE_CONFIG.put("ADMIN_CONTACT", adminContact),
     env.SITE_CONFIG.put("MAX_EMAILS", maxEmails),
+    env.SITE_CONFIG.put("REGISTRATION_ENABLED", (registrationEnabled ?? true).toString()),
     env.SITE_CONFIG.put("TURNSTILE_ENABLED", turnstileConfig.enabled.toString()),
     env.SITE_CONFIG.put("TURNSTILE_SITE_KEY", turnstileConfig.siteKey),
     env.SITE_CONFIG.put("TURNSTILE_SECRET_KEY", turnstileConfig.secretKey)

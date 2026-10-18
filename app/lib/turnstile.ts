@@ -21,6 +21,18 @@ export async function getTurnstileConfig(): Promise<TurnstileConfig> {
   }
 }
 
+export async function isRegistrationEnabled(): Promise<boolean> {
+  try {
+    const env = getRequestContext().env
+    const value = await env.SITE_CONFIG.get("REGISTRATION_ENABLED")
+    // 默认开放注册：存量站点没写过该 key 时不受影响
+    if (value === null || value === undefined) return true
+    return value !== "false"
+  } catch {
+    return true
+  }
+}
+
 export interface TurnstileVerificationResult {
   success: boolean
   reason?: "missing-token" | "verification-failed"
