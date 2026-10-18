@@ -288,8 +288,7 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
   }
 
   const handleCreated = async () => {
-    setShowCreate(false)
-    // 创建后若在搜索态则清空搜索回到全量，避免新邮箱被搜索词过滤掉
+    // 创建后保持展开，由用户手动折叠；若在搜索态则清空搜索回到全量，避免新邮箱被搜索词过滤掉
     if (search.trim()) setSearch("")
     await fetchEmails()
   }
