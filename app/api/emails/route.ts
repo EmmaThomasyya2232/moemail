@@ -1,7 +1,7 @@
 import { createDb } from "@/lib/db"
 import { and, eq, gt, inArray, lt, or, sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
-import { emails, messages } from "@/lib/schema"
+import { emails, messages, pendingMessages } from "@/lib/schema"
 import { encodeCursor, decodeCursor } from "@/lib/cursor"
 import { getUserId } from "@/lib/apiKey"
 
@@ -10,6 +10,8 @@ export const runtime = "edge"
 const PAGE_SIZE = 20
 const MAX_SEARCH_LENGTH = 100
 const MAX_BATCH_DELETE = 100
+// 删邮箱后邮件转暂存的保留期：7 天（与收信暂存一致），过期由 cleanup 清理
+const PENDING_MESSAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 export async function GET(request: Request) {
   const userId = await getUserId()
@@ -112,11 +114,52 @@ export async function DELETE(request: Request) {
         eq(emails.userId, userId!),
         inArray(emails.id, uniqueIds)
       ),
-      columns: { id: true }
+      columns: { id: true, address: true }
     })
     const ownedIds = owned.map((e) => e.id)
     if (ownedIds.length === 0) {
       return NextResponse.json({ error: "邮箱不存在或无权限删除" }, { status: 403 })
+    }
+
+    // 删除前把收到的邮件转入 pending 暂存；转存失败不阻塞删除（只打日志）
+    let stashedCount = 0
+    try {
+      const addressById = new Map(owned.map((e) => [e.id, e.address]))
+      const rows = await db.query.messages.findMany({
+        where: and(
+          inArray(messages.emailId, ownedIds),
+          eq(messages.type, "received")
+        ),
+        columns: {
+          emailId: true,
+          fromAddress: true,
+          toAddress: true,
+          subject: true,
+          content: true,
+          html: true,
+          receivedAt: true,
+        },
+      })
+      if (rows.length > 0) {
+        const now = new Date()
+        const expiresAt = new Date(now.getTime() + PENDING_MESSAGE_TTL_MS)
+        await db.insert(pendingMessages).values(
+          rows.map((m) => ({
+            address: addressById.get(m.emailId) ?? "",
+            addressLower: (addressById.get(m.emailId) ?? "").toLowerCase(),
+            fromAddress: m.fromAddress,
+            toAddress: m.toAddress,
+            subject: m.subject,
+            content: m.content,
+            html: m.html,
+            receivedAt: m.receivedAt,
+            expiresAt,
+          }))
+        )
+        stashedCount = rows.length
+      }
+    } catch (stashError) {
+      console.error('Failed to stash messages on batch delete:', stashError)
     }
 
     await db.delete(messages).where(inArray(messages.emailId, ownedIds))
@@ -127,7 +170,7 @@ export async function DELETE(request: Request) {
       )
     )
 
-    return NextResponse.json({ success: true, deletedIds: ownedIds })
+    return NextResponse.json({ success: true, deletedIds: ownedIds, stashedCount })
   } catch (error) {
     console.error('Failed to batch delete emails:', error)
     return NextResponse.json(

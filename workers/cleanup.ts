@@ -34,6 +34,22 @@ const main = {
       } else {
         console.error('Failed to delete expired emails')
       }
+
+      // 清理过期的暂存邮件：无人认领的先收信 / 删后邮件超过 7 天直接丢弃
+      const pendingResult = await env.DB
+        .prepare(`
+          DELETE FROM pending_message
+          WHERE expires_at < ?
+          LIMIT ?
+        `)
+        .bind(now, CLEANUP_CONFIG.BATCH_SIZE)
+        .run()
+
+      if (pendingResult.success) {
+        console.log(`Deleted ${pendingResult?.meta?.changes ?? 0} expired pending messages`)
+      } else {
+        console.error('Failed to delete expired pending messages')
+      }
     } catch (error) {
       console.error('Failed to cleanup:', error)
       throw error

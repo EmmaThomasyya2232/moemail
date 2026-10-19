@@ -70,6 +70,7 @@
     "create": "Create",
     "creating": "Creating...",
     "success": "Email created successfully",
+    "claimed": "Recovered {count} stashed messages",
     "failed": "Failed to create email"
   },
   "messages": {

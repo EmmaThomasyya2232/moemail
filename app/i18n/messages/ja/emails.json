@@ -66,6 +66,7 @@
     "create": "作成",
     "creating": "作成中...",
     "success": "メールボックスを作成しました",
+    "claimed": "{count} 件の一時保存メールを復元しました",
     "failed": "メールボックスの作成に失敗しました"
   },
   "messages": {

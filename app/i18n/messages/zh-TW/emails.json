@@ -70,6 +70,7 @@
     "create": "建立",
     "creating": "建立中...",
     "success": "郵箱建立成功",
+    "claimed": "已找回 {count} 封暫存郵件",
     "failed": "建立郵箱失敗"
   },
   "messages": {

@@ -1,12 +1,55 @@
 import { NextResponse } from "next/server"
 import { createDb } from "@/lib/db"
-import { emails, messages } from "@/lib/schema"
+import { emails, messages, pendingMessages } from "@/lib/schema"
 import { eq, and, lt, or, sql, ne, isNull } from "drizzle-orm"
 import { encodeCursor, decodeCursor } from "@/lib/cursor"
 import { getUserId } from "@/lib/apiKey"
 import { checkBasicSendPermission } from "@/lib/send-permissions"
 
 export const runtime = "edge"
+
+// 删邮箱后邮件转暂存的保留期：7 天（与收信暂存一致），过期由 cleanup 清理
+const PENDING_MESSAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+// 删邮箱时把邮件转入 pending 暂存（而不是直接丢弃），同地址重建时自动认领回来
+async function stashMessagesForDelete(
+  db: ReturnType<typeof createDb>,
+  emailId: string,
+  address: string,
+) {
+  const rows = await db.query.messages.findMany({
+    where: and(
+      eq(messages.emailId, emailId),
+      eq(messages.type, "received")
+    ),
+    columns: {
+      fromAddress: true,
+      toAddress: true,
+      subject: true,
+      content: true,
+      html: true,
+      receivedAt: true,
+    },
+  })
+  if (rows.length === 0) return 0
+
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + PENDING_MESSAGE_TTL_MS)
+  await db.insert(pendingMessages).values(
+    rows.map((m) => ({
+      address,
+      addressLower: address.toLowerCase(),
+      fromAddress: m.fromAddress,
+      toAddress: m.toAddress,
+      subject: m.subject,
+      content: m.content,
+      html: m.html,
+      receivedAt: m.receivedAt,
+      expiresAt,
+    }))
+  )
+  return rows.length
+}
 
 export async function DELETE(
   request: Request,
@@ -30,13 +73,22 @@ export async function DELETE(
         { status: 403 }
       )
     }
+    // 删除前先把收到的邮件转入 pending 暂存；转存失败也不阻塞删除（只打日志），
+    // 避免因为 pending 表未迁移导致删不掉邮箱
+    let stashedCount = 0
+    try {
+      stashedCount = await stashMessagesForDelete(db, id, email.address)
+    } catch (stashError) {
+      console.error('Failed to stash messages on delete:', stashError)
+    }
+
     await db.delete(messages)
       .where(eq(messages.emailId, id))
 
     await db.delete(emails)
       .where(eq(emails.id, id))
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, stashedCount })
   } catch (error) {
     console.error('Failed to delete email:', error)
     return NextResponse.json(

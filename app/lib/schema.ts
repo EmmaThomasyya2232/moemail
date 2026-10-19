@@ -75,6 +75,28 @@ export const messages = sqliteTable("message", {
   emailIdReceivedAtTypeIdx: index("message_email_id_received_at_type_idx").on(table.emailId, table.receivedAt, table.type),
 }))
 
+// 先收信、后建邮箱的场景：收信时邮箱还不存在，邮件先暂存这里。
+// 建出同地址邮箱时自动认领挂到新邮箱上；7 天无人认领由 cleanup 定时清理。
+// addressLower 只存小写地址用于大小写不敏感匹配（D1 上 LOWER() 表达式索引兼容性一般，
+// 所以用冗余列 + 普通索引代替）。
+export const pendingMessages = sqliteTable("pending_message", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  address: text("address").notNull(),
+  addressLower: text("address_lower").notNull(),
+  fromAddress: text("from_address"),
+  toAddress: text("to_address"),
+  subject: text("subject").notNull(),
+  content: text("content").notNull(),
+  html: text("html"),
+  receivedAt: integer("received_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => ({
+  addressLowerIdx: index("pending_message_address_lower_idx").on(table.addressLower),
+  expiresAtIdx: index("pending_message_expires_at_idx").on(table.expiresAt),
+}))
+
 export const webhooks = sqliteTable('webhook', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text('user_id')

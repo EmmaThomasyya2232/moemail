@@ -112,6 +112,14 @@ export function CreateForm({ onEmailCreated, onCancel, showCancel, compact, auto
   }
 
 
+  const showCreateResult = (claimedCount?: number) => {
+    if (claimedCount && claimedCount > 0) {
+      toast({ title: tList("success"), description: t("claimed", { count: claimedCount }) })
+    } else {
+      toast({ title: tList("success"), description: t("success") })
+    }
+  }
+
   const doCreate = async (name: string, sub: string) => {
     setLoading(true)
     try {
@@ -131,7 +139,8 @@ export function CreateForm({ onEmailCreated, onCancel, showCancel, compact, auto
         toast({ title: tList("error"), description: data.error, variant: "destructive" })
         return
       }
-      toast({ title: tList("success"), description: t("success") })
+      const data = await response.json() as { claimedCount?: number }
+      showCreateResult(data.claimedCount)
       onEmailCreated()
       setEmailName("")
       setSubDomain("")
@@ -184,7 +193,8 @@ export function CreateForm({ onEmailCreated, onCancel, showCancel, compact, auto
         toast({ title: tList("error"), description: data.error, variant: "destructive" })
         return
       }
-      toast({ title: tList("success"), description: t("success") })
+      const data = await response.json() as { claimedCount?: number }
+      showCreateResult(data.claimedCount)
       onEmailCreated()
       setEmailName("")
       setSubDomain("")

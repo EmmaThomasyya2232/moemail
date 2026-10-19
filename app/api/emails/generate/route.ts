@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { customAlphabet, nanoid } from "nanoid"
 import { createDb } from "@/lib/db"
-import { emails } from "@/lib/schema"
+import { emails, messages, pendingMessages } from "@/lib/schema"
 import { eq, and, gt, sql } from "drizzle-orm"
 import { EXPIRY_OPTIONS } from "@/types/email"
 import { EMAIL_CONFIG } from "@/config"
@@ -178,10 +178,58 @@ export async function POST(request: Request) {
     const result = await db.insert(emails)
       .values(emailData)
       .returning({ id: emails.id, address: emails.address })
-    
-    return NextResponse.json({ 
+
+    // 认领 7 天内暂存的错投邮件（先收信、后建邮箱 / 删后重建场景），只认领未过期的
+    let claimedCount = 0
+    try {
+      const now = new Date()
+      const pending = await db.query.pendingMessages.findMany({
+        where: and(
+          eq(pendingMessages.addressLower, result[0].address.toLowerCase()),
+          gt(pendingMessages.expiresAt, now)
+        ),
+        columns: {
+          id: true,
+          fromAddress: true,
+          toAddress: true,
+          subject: true,
+          content: true,
+          html: true,
+          receivedAt: true,
+        },
+      })
+
+      if (pending.length > 0) {
+        await db.insert(messages).values(
+          pending.map((p) => ({
+            emailId: result[0].id,
+            fromAddress: p.fromAddress,
+            toAddress: p.toAddress,
+            subject: p.subject,
+            content: p.content,
+            html: p.html,
+            type: "received",
+            receivedAt: p.receivedAt,
+            sentAt: p.receivedAt,
+          }))
+        )
+        await db.delete(pendingMessages).where(
+          and(
+            eq(pendingMessages.addressLower, result[0].address.toLowerCase()),
+            gt(pendingMessages.expiresAt, now)
+          )
+        )
+        claimedCount = pending.length
+      }
+    } catch (claimError) {
+      // 认领失败不影响建邮箱（pending 表可能尚未迁移），只打日志
+      console.error('Failed to claim pending messages:', claimError)
+    }
+
+    return NextResponse.json({
       id: result[0].id,
       email: result[0].address,
+      claimedCount,
       ...(generatedSubDomain ? { subDomain: generatedSubDomain } : {})
     })
   } catch (error) {
