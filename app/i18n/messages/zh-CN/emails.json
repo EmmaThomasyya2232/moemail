@@ -61,6 +61,7 @@
     "subDomainPlaceholder": "可选，比如 edu",
     "randomName": "随机生成前缀",
     "randomSubdomain": "随机生成子域名前缀",
+    "invalidFullAddress": "无法识别该完整邮箱地址，请检查域名是否在本站配置中",
     "expiryTime": "有效期",
     "oneHour": "1 小时",
     "oneDay": "1 天",

@@ -61,6 +61,7 @@
     "subDomainPlaceholder": "可選，例如 edu",
     "randomName": "隨機產生前綴",
     "randomSubdomain": "隨機產生子網域前綴",
+    "invalidFullAddress": "無法識別此完整郵箱地址，請確認網域是否已在本站設定",
     "expiryTime": "有效期",
     "oneHour": "1 小時",
     "oneDay": "1 天",

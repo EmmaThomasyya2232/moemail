@@ -55,6 +55,53 @@ export function CreateForm({ onEmailCreated, onCancel, showCancel, compact, auto
     setSubDomain(randomSubdomainAlphabet())
   }
 
+  // 智能识别：在前缀框粘贴/输入完整地址（如 s9pXBImx@1hcw33.schoolawa.tech）
+  // 时自动拆成 前缀 / 子域 / 域名，避免拼出 xxx@yyy@musin.tech 这种双 @ 地址
+  const parseFullAddress = (raw: string): { name: string, sub: string, domain: string } | null => {
+    const input = raw.trim()
+    const atIndex = input.indexOf("@")
+    if (atIndex <= 0 || atIndex === input.length - 1) return null
+    // 只处理单个 @ 的正常地址，多个 @ 说明输入非法
+    if (input.indexOf("@", atIndex + 1) !== -1) return null
+
+    const pastedName = input.slice(0, atIndex).trim()
+    const pastedHost = input.slice(atIndex + 1).trim().toLowerCase().replace(/\.+$/g, "")
+    if (!pastedName || !pastedHost) return null
+
+    // 在已配置的域名里找最长后缀匹配，剩余部分即为子域前缀
+    // 例：host=1hcw33.schoolawa.tech，base=schoolawa.tech → sub=1hcw33
+    const candidates = [...enabledDomains]
+      .map(d => d.trim().toLowerCase())
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)
+    const matched = candidates.find(base => pastedHost === base || pastedHost.endsWith(`.${base}`))
+    if (!matched) return null
+
+    const sub = pastedHost === matched ? "" : pastedHost.slice(0, pastedHost.length - matched.length - 1)
+    return { name: pastedName, sub, domain: matched }
+  }
+
+  const applySmartAddress = (raw: string): boolean => {
+    const parsed = parseFullAddress(raw)
+    if (!parsed) return false
+    setEmailName(parsed.name)
+    setCurrentDomain(parsed.domain)
+    setSubDomain(parsed.sub)
+    if (parsed.sub) {
+      const allowed = subdomainDomains.length === 0 || subdomainDomains.includes(parsed.domain)
+      if (!allowed) {
+        toast({ title: tList("error"), description: t("subdomainDisabledHint"), variant: "destructive" })
+      }
+    }
+    return true
+  }
+
+  const handleNameChange = (value: string) => {
+    // 用户粘贴完整地址时直接拆分；普通逐字输入含 @ 也同样处理
+    if (value.includes("@") && applySmartAddress(value)) return
+    setEmailName(value)
+  }
+
   const buildEmailAddress = () => {
     const prefix = subDomain.trim()
     return `${emailName}@${prefix ? `${prefix}.` : ""}${currentDomain}`
@@ -96,6 +143,19 @@ export function CreateForm({ onEmailCreated, onCancel, showCancel, compact, auto
   }
 
   const createEmail = async () => {
+    // 兜底：用户直接点创建时前缀框还含完整地址，先拆一次再提交
+    if (emailName.includes("@")) {
+      const parsed = parseFullAddress(emailName)
+      if (!parsed) {
+        toast({ title: tList("error"), description: t("invalidFullAddress"), variant: "destructive" })
+        return
+      }
+      setEmailName(parsed.name)
+      setCurrentDomain(parsed.domain)
+      setSubDomain(parsed.sub)
+      await doCreateWith(parsed.name, parsed.sub, parsed.domain)
+      return
+    }
     if (!emailName.trim()) {
       const random = nanoid(8)
       setEmailName(random)
@@ -103,6 +163,36 @@ export function CreateForm({ onEmailCreated, onCancel, showCancel, compact, auto
       return
     }
     await doCreate(emailName, subDomain.trim())
+  }
+
+  const doCreateWith = async (name: string, sub: string, domain: string) => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/emails/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          subDomain: sub,
+          domain,
+          expiryTime: parseInt(expiryTime)
+        })
+      })
+      if (!response.ok) {
+        const data = await response.json() as { code?: string, error: string }
+        if (data.code === "SUBDOMAIN_NOT_ENABLED") setSubDomain("")
+        toast({ title: tList("error"), description: data.error, variant: "destructive" })
+        return
+      }
+      toast({ title: tList("success"), description: t("success") })
+      onEmailCreated()
+      setEmailName("")
+      setSubDomain("")
+    } catch {
+      toast({ title: tList("error"), description: t("failed"), variant: "destructive" })
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -126,7 +216,7 @@ export function CreateForm({ onEmailCreated, onCancel, showCancel, compact, auto
         <div className="flex gap-1.5">
           <Input
             value={emailName}
-            onChange={(e) => setEmailName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             placeholder={t("namePlaceholder")}
             className="h-8 flex-1 text-[13px]"
             autoFocus={autoFocus}

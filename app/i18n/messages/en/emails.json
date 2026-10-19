@@ -61,6 +61,7 @@
     "subDomainPlaceholder": "Optional, e.g. edu",
     "randomName": "Generate random prefix",
     "randomSubdomain": "Generate random subdomain prefix",
+    "invalidFullAddress": "Cannot parse this email address. Check whether its domain is configured on this site",
     "expiryTime": "Validity Period",
     "oneHour": "1 Hour",
     "oneDay": "1 Day",

@@ -57,6 +57,7 @@
     "subDomainPlaceholder": "선택 사항, 예: edu",
     "randomName": "무작위 접두사 생성",
     "randomSubdomain": "무작위 서브도메인 접두사 생성",
+    "invalidFullAddress": "이 이메일 주소를 인식할 수 없습니다. 도메인이 이 사이트에 설정되어 있는지 확인하세요",
     "expiryTime": "유효 기간",
     "oneHour": "1시간",
     "oneDay": "1일",
