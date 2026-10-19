@@ -123,7 +123,12 @@
     "textFormat": "纯文本格式",
     "codeLabel": "验证码",
     "copyCode": "复制验证码",
-    "codeCopied": "已复制"
+    "codeCopied": "已复制",
+    "translate": "翻译成中文",
+    "translating": "翻译中...",
+    "showOriginal": "显示原文",
+    "translatedHint": "以下为机器翻译，仅供参考",
+    "translateFailed": "翻译失败，请稍后重试"
   },
   "share": {
     "title": "分享邮箱",

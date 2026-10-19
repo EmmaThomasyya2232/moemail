@@ -119,7 +119,12 @@
     "textFormat": "일반 텍스트 형식",
     "codeLabel": "인증 코드",
     "copyCode": "코드 복사",
-    "codeCopied": "복사됨"
+    "codeCopied": "복사됨",
+    "translate": "중국어로 번역",
+    "translating": "번역 중...",
+    "showOriginal": "원문 보기",
+    "translatedHint": "아래는 기계 번역으로 참고용입니다",
+    "translateFailed": "번역에 실패했습니다. 잠시 후 다시 시도해주세요"
   },
   "share": {
     "title": "메일함 공유",

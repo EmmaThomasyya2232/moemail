@@ -119,7 +119,12 @@
     "textFormat": "テキスト表示",
     "codeLabel": "認証コード",
     "copyCode": "コードをコピー",
-    "codeCopied": "コピーしました"
+    "codeCopied": "コピーしました",
+    "translate": "中国語に翻訳",
+    "translating": "翻訳中...",
+    "showOriginal": "原文を表示",
+    "translatedHint": "以下は機械翻訳であり、参考用です",
+    "translateFailed": "翻訳に失敗しました。しばらくしてから再試行してください"
   },
   "share": {
     "title": "メールボックスを共有",

@@ -123,7 +123,12 @@
     "textFormat": "Plain Text Format",
     "codeLabel": "Verification code",
     "copyCode": "Copy code",
-    "codeCopied": "Copied"
+    "codeCopied": "Copied",
+    "translate": "Translate to Chinese",
+    "translating": "Translating...",
+    "showOriginal": "Show original",
+    "translatedHint": "Machine translation for reference only",
+    "translateFailed": "Translation failed, please try again later"
   },
   "share": {
     "title": "Share Mailbox",

@@ -123,7 +123,12 @@
     "textFormat": "純文字格式",
     "codeLabel": "驗證碼",
     "copyCode": "複製驗證碼",
-    "codeCopied": "已複製"
+    "codeCopied": "已複製",
+    "translate": "翻譯成中文",
+    "translating": "翻譯中...",
+    "showOriginal": "顯示原文",
+    "translatedHint": "以下為機器翻譯，僅供參考",
+    "translateFailed": "翻譯失敗，請稍後再試"
   },
   "share": {
     "title": "分享郵箱",
