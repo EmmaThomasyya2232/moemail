@@ -44,7 +44,14 @@
     "deleting": "삭제 중...",
     "inlineCreate": "새 메일함",
     "collapseCreate": "접기",
-    "loadAllForSearch": "전체 로드 후 검색"
+    "loadAllForSearch": "전체 로드 후 검색",
+    "lock": "메일함 잠금",
+    "unlock": "메일함 잠금 해제",
+    "lockSuccess": "메일함이 잠겼습니다. 삭제 시 자동으로 건너뜁니다",
+    "unlockSuccess": "메일함 잠금이 해제되었습니다",
+    "lockFailed": "잠금 상태 변경에 실패했습니다",
+    "lockedDeleteBlocked": "이 메일함은 잠겨 있습니다. 먼저 잠금을 해제한 뒤 삭제하세요",
+    "batchDeletePartialLocked": "{deleted}개 삭제, 잠긴 {skipped}개 건너뜀"
   },
   "create": {
     "title": "이메일 생성",

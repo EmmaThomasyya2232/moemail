@@ -44,7 +44,14 @@
     "deleting": "削除中...",
     "inlineCreate": "新規メールボックス",
     "collapseCreate": "閉じる",
-    "loadAllForSearch": "すべて読み込んで検索"
+    "loadAllForSearch": "すべて読み込んで検索",
+    "lock": "メールボックスをロック",
+    "unlock": "メールボックスのロック解除",
+    "lockSuccess": "メールボックスをロックしました。削除時はスキップされます",
+    "unlockSuccess": "メールボックスのロックを解除しました",
+    "lockFailed": "ロック状態の切り替えに失敗しました",
+    "lockedDeleteBlocked": "このメールボックスはロックされています。先にロック解除してください",
+    "batchDeletePartialLocked": "{deleted} 件削除、ロック中の {skipped} 件をスキップ"
   },
   "create": {
     "title": "メールボックスを作成",

@@ -73,6 +73,14 @@ export async function DELETE(
         { status: 403 }
       )
     }
+
+    // 锁定的邮箱单个删除也拒绝，只能先解锁再删（前端会提前拦截，这里是防绕过）
+    if (email.isLocked) {
+      return NextResponse.json(
+        { code: "EMAIL_LOCKED", error: "该邮箱已锁定，请先解锁后再删除" },
+        { status: 423 }
+      )
+    }
     // 删除前先把收到的邮件转入 pending 暂存；转存失败也不阻塞删除（只打日志），
     // 避免因为 pending 表未迁移导致删不掉邮箱
     let stashedCount = 0

@@ -1,0 +1,1 @@
+ALTER TABLE `email` ADD `is_locked` integer DEFAULT false NOT NULL;

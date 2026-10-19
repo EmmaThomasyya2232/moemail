@@ -114,20 +114,31 @@ export async function DELETE(request: Request) {
         eq(emails.userId, userId!),
         inArray(emails.id, uniqueIds)
       ),
-      columns: { id: true, address: true }
+      columns: { id: true, address: true, isLocked: true }
     })
     const ownedIds = owned.map((e) => e.id)
     if (ownedIds.length === 0) {
       return NextResponse.json({ error: "邮箱不存在或无权限删除" }, { status: 403 })
     }
 
+    // 锁定的邮箱批量删除时自动跳过；全部被锁定时直接报错
+    const lockedIds = owned.filter((e) => e.isLocked).map((e) => e.id)
+    const deletable = owned.filter((e) => !e.isLocked)
+    const deletableIds = deletable.map((e) => e.id)
+    if (deletableIds.length === 0) {
+      return NextResponse.json(
+        { code: "EMAIL_LOCKED", error: "所选邮箱均已锁定，请先解锁后再删除", lockedIds },
+        { status: 423 }
+      )
+    }
+
     // 删除前把收到的邮件转入 pending 暂存；转存失败不阻塞删除（只打日志）
     let stashedCount = 0
     try {
-      const addressById = new Map(owned.map((e) => [e.id, e.address]))
+      const addressById = new Map(deletable.map((e) => [e.id, e.address]))
       const rows = await db.query.messages.findMany({
         where: and(
-          inArray(messages.emailId, ownedIds),
+          inArray(messages.emailId, deletableIds),
           eq(messages.type, "received")
         ),
         columns: {
@@ -162,15 +173,15 @@ export async function DELETE(request: Request) {
       console.error('Failed to stash messages on batch delete:', stashError)
     }
 
-    await db.delete(messages).where(inArray(messages.emailId, ownedIds))
+    await db.delete(messages).where(inArray(messages.emailId, deletableIds))
     await db.delete(emails).where(
       and(
         eq(emails.userId, userId!),
-        inArray(emails.id, ownedIds)
+        inArray(emails.id, deletableIds)
       )
     )
 
-    return NextResponse.json({ success: true, deletedIds: ownedIds, stashedCount })
+    return NextResponse.json({ success: true, deletedIds: deletableIds, skippedLockedIds: lockedIds, stashedCount })
   } catch (error) {
     console.error('Failed to batch delete emails:', error)
     return NextResponse.json(

@@ -44,7 +44,14 @@
     "deleting": "Deleting...",
     "inlineCreate": "New mailbox",
     "collapseCreate": "Collapse",
-    "loadAllForSearch": "Load all then search"
+    "loadAllForSearch": "Load all then search",
+    "lock": "Lock mailbox",
+    "unlock": "Unlock mailbox",
+    "lockSuccess": "Mailbox locked, it will be skipped on delete",
+    "unlockSuccess": "Mailbox unlocked",
+    "lockFailed": "Failed to toggle lock",
+    "lockedDeleteBlocked": "This mailbox is locked, unlock it before deleting",
+    "batchDeletePartialLocked": "Deleted {deleted}, skipped {skipped} locked"
   },
   "create": {
     "title": "Create Email",

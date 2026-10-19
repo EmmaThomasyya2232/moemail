@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { CreateForm } from "./create-form"
 import { ShareDialog } from "./share-dialog"
-import { Inbox, Mail, Plus, RefreshCw, Search, Trash2, CheckSquare, Square, X, ChevronDown } from "lucide-react"
+import { Inbox, Mail, Plus, RefreshCw, Search, Trash2, CheckSquare, Square, X, ChevronDown, Lock, LockOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,7 @@ interface Email {
   address: string
   createdAt: number
   expiresAt: number
+  isLocked?: boolean
 }
 
 interface EmailListProps {
@@ -62,6 +63,7 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const [batchDeleting, setBatchDeleting] = useState(false)
+  const [lockingIds, setLockingIds] = useState<Set<string>>(new Set())
   const { toast } = useToast()
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchSeq = useRef(0)
@@ -173,9 +175,17 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
     }
   }
 
-  // 需求1：删除不再二次确认，点击即删
+  // 需求1：删除不再二次确认，点击即删（锁定的邮箱直接拦）
   const handleDelete = async (email: Email) => {
     if (deletingIds.has(email.id)) return
+    if (email.isLocked) {
+      toast({
+        title: t("error"),
+        description: t("lockedDeleteBlocked"),
+        variant: "destructive"
+      })
+      return
+    }
     setDeletingIds(prev => new Set(prev).add(email.id))
     // 乐观删除：先从列表移除，失败再回滚
     const snapshot = emails
@@ -196,6 +206,20 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
       const response = await fetch(`/api/emails/${email.id}`, {
         method: "DELETE"
       })
+
+      if (response.status === 423) {
+        const data = await response.json().catch(() => ({})) as { error?: string }
+        setEmails(snapshot)
+        setTotal(prev => prev + 1)
+        toast({
+          title: t("error"),
+          description: data.error || t("lockedDeleteBlocked"),
+          variant: "destructive"
+        })
+        // 服务端说被锁，顺手把本地状态同步为锁定
+        setEmails(prev => prev.map(e => e.id === email.id ? { ...e, isLocked: true } : e))
+        return
+      }
 
       if (!response.ok) throw new Error("Failed to delete email")
 
@@ -243,16 +267,62 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
     setSelectedIds(new Set())
   }
 
-  // 需求1：批量删除（服务端批量接口，一次请求删多个）
+  // 锁定切换：锁定后单个删除 / 批量删除都会被拒绝，只能先解锁再删
+  const handleToggleLock = async (email: Email) => {
+    if (lockingIds.has(email.id)) return
+    const nextLocked = !email.isLocked
+    setLockingIds(prev => new Set(prev).add(email.id))
+    // 乐观更新，失败回滚
+    setEmails(prev => prev.map(e => e.id === email.id ? { ...e, isLocked: nextLocked } : e))
+
+    try {
+      const response = await fetch(`/api/emails/${email.id}/lock`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locked: nextLocked })
+      })
+      if (!response.ok) throw new Error("Failed to toggle lock")
+      toast({
+        title: t("success"),
+        description: nextLocked ? t("lockSuccess") : t("unlockSuccess")
+      })
+    } catch (error) {
+      console.error("Failed to toggle email lock:", error)
+      setEmails(prev => prev.map(e => e.id === email.id ? { ...e, isLocked: email.isLocked } : e))
+      toast({
+        title: t("error"),
+        description: t("lockFailed"),
+        variant: "destructive"
+      })
+    } finally {
+      setLockingIds(prev => {
+        const next = new Set(prev)
+        next.delete(email.id)
+        return next
+      })
+    }
+  }
+
+  // 需求1：批量删除（服务端批量接口，一次请求删多个；锁定的自动跳过）
   const handleBatchDelete = async () => {
     const ids = [...selectedIds]
     if (ids.length === 0 || batchDeleting) return
+    const lockedInSelection = emails.filter(e => selectedIds.has(e.id) && e.isLocked)
+    const deletableIds = ids.filter(id => !emails.find(e => e.id === id)?.isLocked)
+    if (deletableIds.length === 0) {
+      toast({
+        title: t("error"),
+        description: t("lockedDeleteBlocked"),
+        variant: "destructive"
+      })
+      return
+    }
     setBatchDeleting(true)
     const snapshot = emails
-    const selectedSet = new Set(ids)
-    setEmails(prev => prev.filter(e => !selectedSet.has(e.id)))
-    setTotal(prev => Math.max(0, prev - ids.length))
-    if (selectedEmailId && selectedSet.has(selectedEmailId)) {
+    const deletableSet = new Set(deletableIds)
+    setEmails(prev => prev.filter(e => !deletableSet.has(e.id)))
+    setTotal(prev => Math.max(0, prev - deletableIds.length))
+    if (selectedEmailId && deletableSet.has(selectedEmailId)) {
       onEmailSelect(null)
     }
 
@@ -260,23 +330,50 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
       const response = await fetch("/api/emails", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids })
+        body: JSON.stringify({ ids: deletableIds })
       })
+      if (response.status === 423) {
+        const data = await response.json().catch(() => ({})) as { error?: string }
+        setEmails(snapshot)
+        setTotal(prev => prev + deletableIds.length)
+        toast({
+          title: t("error"),
+          description: data.error || t("lockedDeleteBlocked"),
+          variant: "destructive"
+        })
+        return
+      }
       if (!response.ok) throw new Error("batch delete failed")
-      const data = await response.json() as { deletedIds?: string[] }
-      const deletedCount = data.deletedIds?.length ?? ids.length
+      const data = await response.json() as { deletedIds?: string[], skippedLockedIds?: string[] }
+      const deletedCount = data.deletedIds?.length ?? deletableIds.length
+      const skippedCount = (data.skippedLockedIds?.length ?? 0) + lockedInSelection.filter(
+        e => !(data.skippedLockedIds ?? []).includes(e.id) && !((data.deletedIds ?? []).includes(e.id))
+      ).length
+      // 服务端实际删掉的才清选中，锁定的保留选中态方便用户解锁后处理
+      const deletedSet = new Set(data.deletedIds ?? deletableIds)
+      setSelectedIds(prev => {
+        const next = new Set([...prev].filter(id => !deletedSet.has(id)))
+        return next
+      })
+      const skippedLockedIds = new Set([...(data.skippedLockedIds ?? []), ...lockedInSelection.map(e => e.id)])
+      if (skippedLockedIds.size > 0) {
+        setEmails(prev => prev.map(e => skippedLockedIds.has(e.id) ? { ...e, isLocked: true } : e))
+      }
       toast({
         title: t("success"),
-        description: t("batchDeleteSuccess", { count: deletedCount })
+        description: skippedCount > 0
+          ? t("batchDeletePartialLocked", { deleted: deletedCount, skipped: skippedCount })
+          : t("batchDeleteSuccess", { count: deletedCount })
       })
-      setSelectedIds(new Set())
-      setSelectMode(false)
+      if (deletedSet.size >= selectedIds.size || [...selectedIds].every(id => deletedSet.has(id))) {
+        setSelectMode(false)
+      }
       // 批量删后补拉一页，保持列表连续
       fetchEmails(undefined, search)
     } catch (error) {
       console.error("Failed to batch delete emails:", error)
       setEmails(snapshot)
-      setTotal(prev => prev + ids.length)
+      setTotal(prev => prev + deletableIds.length)
       toast({
         title: t("error"),
         description: t("batchDeleteFailed"),
@@ -436,6 +533,8 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
                 const isPermanent = new Date(email.expiresAt).getFullYear() === 9999
                 const checked = selectedIds.has(email.id)
                 const deleting = deletingIds.has(email.id)
+                const locking = lockingIds.has(email.id)
+                const locked = Boolean(email.isLocked)
                 return (
                   <div
                     key={email.id}
@@ -476,7 +575,10 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
                     )}
 
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-medium leading-tight">{local}</span>
+                      <span className="flex items-center gap-1 text-[13px] font-medium leading-tight">
+                        <span className="block truncate">{local}</span>
+                        {locked && <Lock className="size-3 shrink-0 text-amber-500" />}
+                      </span>
                       <span className="mt-0.5 block truncate text-[11px] leading-tight text-muted-foreground">
                         {domain ? `@${domain} · ` : ""}
                         {isPermanent ? t("permanent") : new Date(email.expiresAt).toLocaleDateString()}
@@ -492,9 +594,25 @@ export function EmailList({ onEmailSelect, selectedEmailId }: EmailListProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          title={tCommon("delete")}
-                          disabled={deleting}
+                          className={cn("h-7 w-7", locked ? "text-amber-500" : "text-muted-foreground")}
+                          title={locked ? t("unlock") : t("lock")}
+                          disabled={locking}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleLock(email)
+                          }}
+                        >
+                          {locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-7 w-7",
+                            locked ? "text-muted-foreground/40" : "text-muted-foreground hover:text-destructive"
+                          )}
+                          title={locked ? t("lockedDeleteBlocked") : tCommon("delete")}
+                          disabled={deleting || locked}
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDelete(email)

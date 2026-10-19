@@ -44,7 +44,14 @@
     "deleting": "刪除中...",
     "inlineCreate": "新建郵箱",
     "collapseCreate": "收起",
-    "loadAllForSearch": "載入全部再搜"
+    "loadAllForSearch": "載入全部再搜",
+    "lock": "鎖定郵箱",
+    "unlock": "解鎖郵箱",
+    "lockSuccess": "郵箱已鎖定，刪除時會自動略過",
+    "unlockSuccess": "郵箱已解鎖",
+    "lockFailed": "切換鎖定狀態失敗",
+    "lockedDeleteBlocked": "此郵箱已鎖定，請先解鎖後再刪除",
+    "batchDeletePartialLocked": "已刪除 {deleted} 個，略過 {skipped} 個已鎖定"
   },
   "create": {
     "title": "建立郵箱",

@@ -47,6 +47,8 @@ export const emails = sqliteTable("email", {
     .notNull()
     .$defaultFn(() => new Date()),
   expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  // 锁定后单个删除 / 批量删除都会拒绝，只能先解锁再删
+  isLocked: integer("is_locked", { mode: "boolean" }).notNull().default(false),
 }, (table) => ({
   expiresAtIdx: index("email_expires_at_idx").on(table.expiresAt),
   userIdIdx: index("email_user_id_idx").on(table.userId),

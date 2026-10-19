@@ -44,7 +44,14 @@
     "deleting": "删除中...",
     "inlineCreate": "新建邮箱",
     "collapseCreate": "收起",
-    "loadAllForSearch": "加载全部再搜"
+    "loadAllForSearch": "加载全部再搜",
+    "lock": "锁定邮箱",
+    "unlock": "解锁邮箱",
+    "lockSuccess": "邮箱已锁定，删除时会自动跳过",
+    "unlockSuccess": "邮箱已解锁",
+    "lockFailed": "切换锁定状态失败",
+    "lockedDeleteBlocked": "该邮箱已锁定，请先解锁后再删除",
+    "batchDeletePartialLocked": "已删除 {deleted} 个，跳过 {skipped} 个已锁定"
   },
   "create": {
     "title": "创建邮箱",

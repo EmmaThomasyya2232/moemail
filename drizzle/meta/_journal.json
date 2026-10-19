@@ -141,6 +141,13 @@
       "when": 1792378015703,
       "tag": "0019_pending-messages",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1792378917267,
+      "tag": "0020_email-lock",
+      "breakpoints": true
     }
   ]
 }
